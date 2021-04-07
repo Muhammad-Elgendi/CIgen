@@ -16,3 +16,21 @@ RUN apk update \
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
+
+# create the app user
+RUN addgroup -S app && adduser -S app -G app
+
+# set work directory
+WORKDIR /usr/src/app
+
+# copy entrypoint.sh
+COPY ./entrypoint.sh ../
+
+# chown all the files to the app user
+RUN chown -R app:app ./
+
+# change to the app user
+USER app
+
+# run entrypoint.sh
+ENTRYPOINT ["/usr/src/entrypoint.sh"]
