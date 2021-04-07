@@ -1,3 +1,7 @@
+# CIgen
+.env.dev
+.env.prod
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

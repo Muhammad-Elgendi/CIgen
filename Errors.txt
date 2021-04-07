@@ -1,0 +1,5 @@
+==============================================================================================
+pgadmin exit code 3 PermissionError: [Errno 13] Permission denied: '/var/lib/pgadmin/sessions'
+==============================================================================================
+chown -R 5050:5050 ~/.laradock/data/pgadmin
+https://github.com/laradock/laradock/issues/2552
