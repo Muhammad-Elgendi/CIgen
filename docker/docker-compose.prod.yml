@@ -1,18 +1,6 @@
 version: '3.7'
 
 services:
-    web:
-        build: ./web    
-        command: gunicorn CIgen.wsgi:application --bind 0.0.0.0:8000
-        volumes:
-            - ../:/usr/src/app/
-        ports:
-            - 8000:8000
-        env_file:
-            - ../.env.prod
-        depends_on:
-        - postgres
-
     postgres:
         image: postgres:12.0-alpine
         volumes:
@@ -21,3 +9,24 @@ services:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
+
+    web:
+        build: ./web    
+        command: gunicorn CIgen.wsgi:application --bind 0.0.0.0:8000
+        volumes:
+            - ../:/usr/src/app/
+        expose:
+            - 8000
+        env_file:
+            - ../.env.prod
+        depends_on:
+            - postgres
+
+    nginx:
+        build: ./nginx
+        ports:
+            - 80:80
+        volumes:
+            - ../:/usr/src/app/
+        depends_on:
+            - web

@@ -1,0 +1,11 @@
+<div class="row">
+    <!--Grid column-->
+    <div class="col-md-9 mb-md-0 mb-5 mx-auto">
+        <form id="login-form" name="login-form" method="POST">
+        {% csrf_token %}
+        {{ form }}
+        <div class="text-center text-md-left mt-3">
+            <button type="submit" class="btn btn-primary">Login</button>
+        </div>
+        </form>
+</div>

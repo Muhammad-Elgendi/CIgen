@@ -61,11 +61,11 @@ class Course(models.Model):
 
 @receiver(post_save, sender=User)
 def create_user_course(sender, instance, created, **kwargs):
-    if created:
-        Course.objects.create(user=instance)
-
+    # if created:
+    #     Course.objects.create(user=instance)
+    pass
+    
 @receiver(post_save, sender=User)
 def save_user_course(sender, instance, **kwargs):
-    instance.course.save()
-
-
+    # instance.course.save()
+    pass
