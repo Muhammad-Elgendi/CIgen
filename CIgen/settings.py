@@ -143,4 +143,4 @@ MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "public","media_root")
 
-AUTH_USER_MODEL = 'dashboard.User'
+# AUTH_USER_MODEL = 'dashboard.User'
