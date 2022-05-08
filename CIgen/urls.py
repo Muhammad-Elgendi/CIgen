@@ -23,8 +23,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # path('', include('home.urls')),
-    path('', home_page),
+    path('', include('home.urls')),
+    # path('', home_page),
     path('about/', about_page),
     path('contact/', contact_page),
     path('login/',login_page),

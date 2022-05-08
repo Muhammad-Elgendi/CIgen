@@ -21,12 +21,13 @@ class QuizAdmin(admin.ModelAdmin):
         return new_urls + urls
 
     def upload_quiz(self,request):
+        df = None
         if request.method == "POST":
             quiz_file = request.FILES["file_to_upload"]
             
-            print(quiz_file.read())
+            # print(quiz_file.read())
 
-            quiz_df = pd.read_excel(quiz_file)
+            df = pd.read_excel(quiz_file)
 
             # quiz format
             # {'q1':{'question':'test question?','choices':[{'a':'right answer'}]},'answers':{'q1':'a'}}
@@ -34,12 +35,17 @@ class QuizAdmin(admin.ModelAdmin):
             # {	"name": "fdgdfgfdgfdg",	"phone": "0101424242",	"q1": "a"}
 
             Quiz.objects.update_or_create(
-                name='test2',
-                quiz = {'test':'test'}
+                name = quiz_file.name.split(".")[0],
+                quiz = df.to_json(orient='split')
             )
-
         form = UploadForm()
-        data = {"form":form}
+        data = {"form":form,
+                "df":df
+                }
+
+        if isinstance(df, pd.DataFrame):
+            data.update( { "df": df.to_html() })
+            
         return render(request,"admin/dashboard/quiz/upload.html",data)
 
 admin.site.register(Quiz, QuizAdmin)
