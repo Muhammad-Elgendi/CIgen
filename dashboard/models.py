@@ -12,11 +12,11 @@ class Quiz(models.Model):
     quiz = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return self.name+' : '+str(self.id)
+        return self.name+' #'+str(self.id)
 
 class Answer(models.Model):
     quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE)
     answer = models.JSONField()
     created_at = models.DateTimeField()
     def __str__(self):
-        return self.quiz.name+' : '+str(self.created_at)
+        return self.quiz.name+' @'+str(self.created_at)

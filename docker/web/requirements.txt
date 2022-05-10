@@ -4,3 +4,4 @@ psycopg2-binary==2.8.6
 gunicorn==20.0.4
 pandas==1.4.2
 openpyxl==3.0.9
+qrcode==7.3.1

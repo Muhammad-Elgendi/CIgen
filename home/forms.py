@@ -61,3 +61,7 @@ class QuizForm(forms.Form):
     #     if qs.exists():
     #         raise forms.ValidationError("This email is already registered")      
     #     return email
+
+
+class InviteForm(forms.Form):
+    links = forms.CharField(required=True,widget=forms.Textarea(attrs={"id":"links","name":"links","class":"form-control","placeholder":"Enter Your Links (One Link per Line)","rows":"3"}))

@@ -1,8 +1,19 @@
 {% extends "admin/change_list.html" %}
 {% load static %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="upload-quiz/" class="addlink">Upload a Quiz from XLSX (Excel)</a>
+</li>
+{% endblock %}
+
+
+{% comment %}
+
 {% block content %}
-
-<a href="upload-quiz/">Upload a Quiz from XLSX (Excel)</a>
-
+    <a href="upload-quiz/">Upload a Quiz from XLSX (Excel)</a>
 {{ block.super }}
 {% endblock %}
+
+{% endcomment %}

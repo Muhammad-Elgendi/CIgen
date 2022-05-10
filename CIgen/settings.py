@@ -29,6 +29,13 @@ DEBUG = bool(os.environ.get("DEBUG", default=False))
 # 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
 # For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
 # it should be a list
+#
+# To allow access through multiple NICs 
+# Less secure if you're not firewalled off or on a public LAN,
+# but it's what I use and it works.
+# ALLOWED_HOSTS = ['*']
+# in env file add: 'DJANGO_ALLOWED_HOSTS=*'
+
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 
