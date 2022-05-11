@@ -66,11 +66,12 @@ def view_quiz(request,quiz_id):
 
             print("scored : "+str(score))
 
-            result = "Success" if score >= len(questions)/2 else "Fail"
+            result = "Success" if score >= len(questions)/2  or len(questions) == 0 else "Fail"
 
             student_answers.update({
                 "score":score,
-                "result":result
+                "result":result,
+                "total":len(questions)
             })
 
             saved_answer, created = Answer.objects.get_or_create(     
@@ -103,7 +104,8 @@ def view_result(request,answer_id):
         answer = json.loads(answer.answer)
 
         context = {"score":answer.get('score'),
-                "result":answer.get('result')
+                "result":answer.get('result'),
+                "total":answer.get('total')
                 }
         return render(request,"home/success.html",context)
     return redirect("home:index")

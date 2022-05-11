@@ -1,14 +1,14 @@
-from django.contrib import admin
-from django.urls import path
+from django.contrib import admin, messages
+from django.urls import path, reverse
 from django.shortcuts import render, redirect
 from django import forms
-from django.contrib import messages
-from django.urls import reverse
-from .models import Quiz
-from .models import Answer
+from .models import Quiz, Answer
 import pandas as pd
 import json
 from django.utils.safestring import mark_safe
+from django.http import FileResponse, HttpResponse
+from io import BytesIO
+
 
 
 class UploadForm(forms.Form):
@@ -32,8 +32,51 @@ class QuizAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
-        new_urls = [path('upload-quiz/',self.upload_quiz)]
+        new_urls = [
+            path('upload-quiz/',self.upload_quiz),
+            path('<int:quiz_id>/export/',self.export_answers),
+            ]
         return new_urls + urls
+
+    def export_answers(self,request,quiz_id):
+        quiz = Quiz.objects.get(id=quiz_id)
+
+        answers = quiz.answer_set.all()
+        df = pd.DataFrame(json.loads(answers[0].answer), index=[0])
+        for answer in answers:
+            if answer.answer:
+                temp = pd.DataFrame(json.loads(answer.answer), index=[0])
+                df = pd.concat([df, temp],axis=0,ignore_index=True)
+
+        # render questions as columns
+        quiz_df = pd.read_json(quiz.quiz, orient='split')
+        new_columns = {}
+        for num,col in enumerate(quiz_df.columns):
+            if 'q' in df.columns[num]:
+                new_columns.update(
+                    {   
+                        df.columns[num] : quiz_df.columns[df.columns.get_loc('q'+str(num+1))]
+                    }
+                )
+        df.rename(columns = new_columns, inplace = True)
+
+        # TODO render answers not the indexes
+
+        # download answers dataframe
+        with BytesIO() as b:
+            # Use the StringIO object as the filehandle.
+            writer = pd.ExcelWriter(b, engine='openpyxl')
+            df.to_excel(writer, sheet_name=quiz.name + ' answers')
+            writer.save()
+            # Set up the Http response.
+            filename = quiz.name+" answers.xlsx"
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
+
 
     def upload_quiz(self,request):
         df = None

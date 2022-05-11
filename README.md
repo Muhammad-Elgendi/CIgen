@@ -2,22 +2,22 @@
 <br />
 <p align="center">
   <a href="https://github.com//Muhammad-Elgendi/CIgen">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="staticfiles/img/favicon.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">CIgen</h3>
 
   <p align="center">
-    An open source school management system built for credit-hours based schools
+    CIgen is an open-source quizzing software to create and deliver online quizzes, exams, and tests.
     <br />
-    <a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com//Muhammad-Elgendi/CIgen"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/github_username/repo_name">View Demo</a>
+    <a href="https://github.com//Muhammad-Elgendi/CIgen">View Demo</a>
     ·
-    <a href="https://github.com/github_username/repo_name/issues">Report Bug</a>
+    <a href="https://github.com//Muhammad-Elgendi/CIgen/issues">Report Bug</a>
     ·
-    <a href="https://github.com/github_username/repo_name/issues">Request Feature</a>
+    <a href="https://github.com//Muhammad-Elgendi/CIgen/issues">Request Feature</a>
   </p>
 </p>
 
@@ -110,26 +110,29 @@ Install docker engine and docker compose.
    ```sh
    docker-compose up
    ```
-# Generate new security key
+7. Generate a new security key
+
+8. Creating a New Administrator Account
+    ```sh
+   docker-compose exec web bash
+   python manage.py createsuperuser
+   ```
+9. Fill out your credentials
+
+10. Open a new browser tab and Visit localhost:8000
 
 
 
 
-<!-- USAGE EXAMPLES -->
-## Usage
+<!-- Use Cases -->
+## Use Cases
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+CIgen could be used for different use cases, here are some examples:
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+1. Quiz maker software
+2. Attendance management software
 
-
-
-<!-- ROADMAP -->
-## Roadmap
-
-See the [open issues](https://github.com/github_username/repo_name/issues) for a list of proposed features (and known issues).
-
-
+Additional screenshots, screencasts, and more resources will be soon.
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -147,28 +150,16 @@ Contributions are what make the open source community such an amazing place to b
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the GPL-3.0 license. See `LICENSE` for more information.
 
 
 
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email
+Muhammad Elgendi- [@gendidev](https://twitter.com/@gendidev)
 
-Project Link: [https://github.com/github_username/repo_name](https://github.com/github_username/repo_name)
-
-
-
-<!-- ACKNOWLEDGEMENTS -->
-## Acknowledgements
-
-* []()
-* []()
-* []()
-
-
-
+Project Link: [https://github.com//Muhammad-Elgendi/CIgen](https://github.com//Muhammad-Elgendi/CIgen)
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
