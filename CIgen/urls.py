@@ -24,13 +24,14 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', include('home.urls')),
-    # path('', home_page),
-    path('about/', about_page),
-    path('contact/', contact_page),
-    path('login/',login_page),
-    path('register/',register_page),
     path('dashboard/', include('dashboard.urls')),
     path('admin/', admin.site.urls),
+
+    # path('', home_page),
+    path('about/', about_page, name='about'),
+    path('contact/', contact_page, name='contact'),
+    path('login/',login_page, name='login'),
+    path('register/',register_page, name='register'),
 ]
 
 # serve static files only on development environment

@@ -19,13 +19,13 @@ class QuizAdmin(admin.ModelAdmin):
     list_display_links = ['name']
 
     def get_view_link(self, obj):
-        return mark_safe('<a href="%s">Take Quiz</a>' % reverse('quiz', kwargs={'quiz_id':obj.id }))
+        return mark_safe('<a href="%s">Take Quiz</a>' % reverse('home:quiz', kwargs={'quiz_id':obj.id }))
     get_view_link.allow_tags = True
     get_view_link.admin_order_field  = 'quiz'  #Allows column order sorting
     get_view_link.short_description = 'View'  #Renames column head
 
     def get_invite_link(self, obj):
-        return mark_safe('<a href="%s">Invite Participants</a>' % reverse('invite', kwargs={'quiz_id':obj.id }))
+        return mark_safe('<a href="%s">Invite Participants</a>' % reverse('home:invite', kwargs={'quiz_id':obj.id }))
     get_invite_link.allow_tags = True
     get_invite_link.admin_order_field  = 'quiz'  #Allows column order sorting
     get_invite_link.short_description = 'Invitation'  #Renames column head
@@ -86,5 +86,3 @@ class AnswerAdmin(admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(Answer, AnswerAdmin)
-
-

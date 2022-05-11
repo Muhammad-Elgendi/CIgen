@@ -1,58 +1,41 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends 'base.html' %}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+{% load static %}
 
-    {%  if title %}
-            <title>{{ title }}</title>
-    {% else %}
-            <title>CIgen | {{ quiz.name }}</title>
-    {% endif %}
+{% block content %}
+<div class="container">
+    <div class="row">         
+        <!--Section: invitation-->
+        <section class="mb-4">
+          <!--Section heading-->
+          <h1 class="h1-responsive font-weight-bold text-center my-4">{{quiz.name}}</h1>
+          <!--Section description-->
+          {% if qr %}
+          <h3 class="text-center w-responsive mx-auto mb-5">Scan Me</h3>
+          {% endif %}
 
-  </head>
-  <body>
-    <div class="container">
-        <div class="row">         
-            <!--Section: Contact v.2-->
-            <section class="mb-4">
+            <div class="row">
+            <!--Grid column-->
+            <div class="d-flex justify-content-center col-md-10 mb-md-0 mb-6 mx-auto ">
+              {%  if form %}
+                <form autocomplete="on" id="invite-form" name="invite-form" method="POST" action="{% url 'home:invite' quiz_id=quiz.id %}">
+                  {% csrf_token %}
+                  {{ form }}
+                  <div class="text-center text-md-left mt-3">
+                    <button type="button" class="get-started-btn" onclick="this.disabled=true,this.form.submit();">Generate QR Codes</button>
+                  </div>
+                </form>
+              {% endif %}
+              
+              {% if qr %}
+                {% for img in qr %}                    
+                    <img class="img-responsive img-fluid" src="{% static img %}">
+                {% endfor %}
+              {% endif %}
 
-              <!--Section heading-->
-              <h2 class="h1-responsive font-weight-bold text-center my-4">{{quiz.name}}</h2>
-              <!--Section description-->
-              <p class="text-center w-responsive mx-auto mb-5">“To be, or not to be: that is the question.”</p>
-
-                <div class="row">
-                <!--Grid column-->
-                <div class="col-md-9 mb-md-0 mb-5 mx-auto">
-                  {%  if form %}
-                    <form autocomplete="on" id="invite-form" name="invite-form" method="POST" action="{% url "invite" quiz_id=quiz.id %}">
-                      {% csrf_token %}
-                      {{ form }}
-                      <div class="text-center text-md-left mt-3">
-                        <button type="button" class="btn btn-primary" onclick="this.disabled=true,this.form.submit();">Generate QR Codes</button>
-                      </div>
-                    </form>
-                  {% endif %}
-                </div>
-          </section>
-        </div>
+            </div>
+      </section>
     </div>
-    <!-- Optional JavaScript; choose one of the two! -->
+  </div>
 
-    <noscript>Sorry, your browser does not support JavaScript!</noscript>
-
-    <!-- Option 1: Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
-
-    <!-- Option 2: Separate Popper and Bootstrap JS -->
-    <!--
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
-    -->
-  </body>
-</html>
+{% endblock %}
