@@ -8,6 +8,8 @@ import pandas as pd
 import json
 import qrcode
 import random
+import hashlib
+
 
 # Create your views here.
 def index(request):
@@ -28,9 +30,15 @@ def view_quiz(request,quiz_id):
     ip = request.META.get('REMOTE_ADDR')
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     user_agent = request.META['HTTP_USER_AGENT']
-    seed_str = str(ip)+str(x_forwarded_for)+str(user_agent)
-    seed = int(''.join([s for s in seed_str if s.isdigit()]))
+    seed_str = str(ip)+str(user_agent)+str(x_forwarded_for)
 
+    # for testing, comment the following, and set any number as seed
+   
+    seed = hashlib.sha1(seed_str.encode('utf-8')).hexdigest()
+    seed = ''.join([s for s in seed if s.isdigit()])
+    seed = int(seed[:9])
+
+    print(ip,user_agent,x_forwarded_for) 
     print(seed)
 
     try:
@@ -55,9 +63,11 @@ def view_quiz(request,quiz_id):
 
             # calculate score for student
             score = 0
+            total = 0
             for ques,ans in student_answers.items():
 
-                if 'op'in str(ans) and 'q' in ques:
+                if 'op'in str(ans) and 'q' in ques:                    
+                    total +=1
                     question_no = int(ques.split('q')[1])-1
                     choice = int(ans.split('op')[1])
 
@@ -66,12 +76,12 @@ def view_quiz(request,quiz_id):
 
             print("scored : "+str(score))
 
-            result = "Success" if score >= len(questions)/2  or len(questions) == 0 else "Fail"
+            result = "Success" if score >= total/2  or total == 0 else "Fail"
 
             student_answers.update({
                 "score":score,
                 "result":result,
-                "total":len(questions)
+                "total":total
             })
 
             saved_answer, created = Answer.objects.get_or_create(     

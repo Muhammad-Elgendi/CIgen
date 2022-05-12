@@ -40,27 +40,41 @@ class QuizAdmin(admin.ModelAdmin):
 
     def export_answers(self,request,quiz_id):
         quiz = Quiz.objects.get(id=quiz_id)
-
+        quiz_df = pd.read_json(quiz.quiz, orient='split')
         answers = quiz.answer_set.all()
         df = pd.DataFrame(json.loads(answers[0].answer), index=[0])
-        for answer in answers:
-            if answer.answer:
+        for idx, answer in enumerate(answers):
+            if idx != 0:
                 temp = pd.DataFrame(json.loads(answer.answer), index=[0])
                 df = pd.concat([df, temp],axis=0,ignore_index=True)
 
         # render questions as columns
-        quiz_df = pd.read_json(quiz.quiz, orient='split')
+       
         new_columns = {}
-        for num,col in enumerate(quiz_df.columns):
+        for num,col in enumerate(df.columns):
             if 'q' in df.columns[num]:
                 new_columns.update(
                     {   
-                        df.columns[num] : quiz_df.columns[df.columns.get_loc('q'+str(num+1))]
+                        df.columns[num] : quiz_df.columns[int(df.columns[num].split('q')[1])-1]
                     }
                 )
-        df.rename(columns = new_columns, inplace = True)
 
-        # TODO render answers not the indexes
+                # render answers not the indexes
+
+                # get choices
+                choices = df[col].unique()
+                for choice in choices:
+                    if 'op' in str(choice):
+                        index_of_choice = int(choice.split('op')[1])-1
+                        col_in_quiz = quiz_df.columns[int(col.split('q')[1])-1]
+
+                        df[col].replace(
+                            { choice : quiz_df[col_in_quiz].iloc[index_of_choice] },
+                            inplace=True
+                            )
+
+        # apply new columns names
+        df.rename(columns = new_columns, inplace = True)
 
         # download answers dataframe
         with BytesIO() as b:
