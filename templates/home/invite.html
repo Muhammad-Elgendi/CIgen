@@ -4,20 +4,20 @@
 
 {% block content %}
 <div class="container">
-    <div class="row">         
         <!--Section: invitation-->
+        <div class="row">
         <section class="mb-4">
           <!--Section heading-->
-          <h1 class="h1-responsive font-weight-bold text-center my-4">{{quiz.name}}</h1>
+          <h1 class="h1-responsive font-weight-bold text-center my-5">{{quiz.name}}</h1>
           <!--Section description-->
           {% if qr %}
-          <h3 class="text-center w-responsive mx-auto mb-5">Scan Me</h3>
+          <h2 class="text-center w-responsive mx-auto my-3">Scan Me</h2>
           {% endif %}
 
-            <div class="row">
-            <!--Grid column-->
-            <div class="d-flex justify-content-center col-md-10 mb-md-0 mb-6 mx-auto ">
-              {%  if form %}
+            
+            <!--Grid column-->            
+              {%  if form and qr == None %}
+              
                 <form autocomplete="on" id="invite-form" name="invite-form" method="POST" action="{% url 'home:invite' quiz_id=quiz.id %}">
                   {% csrf_token %}
                   {{ form }}
@@ -27,15 +27,26 @@
                 </form>
               {% endif %}
               
-              {% if qr %}
-                {% for img in qr %}                    
-                    <img class="img-responsive img-fluid" src="{% static img %}">
-                {% endfor %}
-              {% endif %}
 
-            </div>
+              {% if qr %}
+              <div class="row">
+                {% for link, img in qr %}
+                  <div class="col-md-4 col-sm-6 mx-auto">
+
+                    <h3 class="text-center" style="font-size: 1.6vw;"><strong>{{ link }}</strong></h3> 
+                    <img class="img-responsive img-fluid rounded mx-auto d-block my-3" src="{% static img %}">  
+                  
+                  </div>
+                {% endfor %}
+              </div>            
+              {% endif %}
       </section>
     </div>
   </div>
 
+{% endblock %}
+
+{% block scripts %}
+
+{{ block.super }}
 {% endblock %}

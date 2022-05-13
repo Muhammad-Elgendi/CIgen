@@ -20,7 +20,11 @@
         <!--Section: Result-->
         <section class="mb-4">
           <h2 class="h1-responsive font-weight-bold text-center my-4">{{result}} !</h2>
+          {% if score %}
           <h1 class="h1-responsive font-weight-bold text-center my-4">Your Score is <strong>{{score}}</strong> of <strong>{{total}}</strong> </h1>
+          {% else %}
+          <h1 class="h1-responsive font-weight-bold text-center my-4">Your Response Has Been Submitted</h1>
+          {% endif %}
           <p class="text-center w-responsive mx-auto mb-5">“To be, or not to be: that is the question.”</p>
         </section>
     </div>

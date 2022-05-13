@@ -11,18 +11,28 @@ class QuizForm(forms.Form):
         random_seed = kwargs.pop('seed')
 
         super().__init__(*args, **kwargs)
-        questions = [q for q in quiz_df.columns if q.lower() not in ['answers','answer','ans','select'] ]
-        answers = quiz_df['answers']
+        questions = [q for q in quiz_df.columns if q.lower() not in ['answers','select'] ]
         fields_names = []
 
         # if number of questions to be shown is used
+        # currently two options are avilable
+        # 1. select exactly certain number of question, as in e.g. 20, 30 ,15
+        # 2. select random number of question up to certain limit, as in e.g. <=20, <=30, <=15
         random_choose = False
         must_show = {}
+        pool_of_candidate_questions = questions
+        
         if 'select' in quiz_df.columns:
             random_choose = True
-            questions_count = int(quiz_df['select'].iloc[0])
             non_required_questions = [col for col in questions if col[0] != '*']
-            pool_of_candidate_questions = pd.Series(non_required_questions).sample(n=questions_count, random_state=random_seed, replace=True).unique()
+            select_option = str(quiz_df['select'].iloc[0])
+
+            if '<=' not in select_option:
+                questions_count = int(select_option)
+                pool_of_candidate_questions = pd.Series(non_required_questions).sample(n=questions_count, random_state=random_seed, replace=False).unique()
+            else:
+                questions_count = int(select_option.split("<=")[1])
+                pool_of_candidate_questions = pd.Series(non_required_questions).sample(n=questions_count, random_state=random_seed, replace=True).unique()
 
 
         for num ,question in enumerate(questions):
@@ -83,4 +93,4 @@ class QuizForm(forms.Form):
 
 
 class InviteForm(forms.Form):
-    links = forms.CharField(required=True,widget=forms.Textarea(attrs={"id":"links","name":"links","class":"form-control","placeholder":"Enter Your Links (One Link per Line)","rows":"3"}))
+    links = forms.CharField(label='Links to access your quiz in format: domain.tld/quiz e.g. example.com/quiz, http://192.168.0.122:8000/quiz, http://192.168.1.115:8000/quiz ', required=True, widget=forms.Textarea(attrs={"id":"links","name":"links","class":"form-control","placeholder":"Enter Your Links (One Link per Line)","rows":"3"}))

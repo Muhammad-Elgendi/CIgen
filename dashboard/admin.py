@@ -42,6 +42,8 @@ class QuizAdmin(admin.ModelAdmin):
         quiz = Quiz.objects.get(id=quiz_id)
         quiz_df = pd.read_json(quiz.quiz, orient='split')
         answers = quiz.answer_set.all()
+        if not answers:
+            return redirect('home:quiz',quiz_id=quiz_id)
         df = pd.DataFrame(json.loads(answers[0].answer), index=[0])
         for idx, answer in enumerate(answers):
             if idx != 0:
@@ -75,6 +77,10 @@ class QuizAdmin(admin.ModelAdmin):
 
         # apply new columns names
         df.rename(columns = new_columns, inplace = True)
+
+        # add percent column to dataframe if quiz type
+        if 'total' in df.columns:
+            df['percent'] = round(df['score'] / df['total'] * 100, 2) if df['total'].any() else 0
 
         # download answers dataframe
         with BytesIO() as b:
@@ -129,7 +135,7 @@ admin.site.register(Quiz, QuizAdmin)
 
 
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ['get_quiz', 'get_score', 'created_at']
+    list_display = ['get_quiz', 'get_score', 'get_total', 'get_percent', 'created_at']
 
     def get_quiz(self, obj):
         return obj.quiz.name + " Answer"
@@ -140,6 +146,20 @@ class AnswerAdmin(admin.ModelAdmin):
         return json.loads(obj.answer).get('score')
     get_score.admin_order_field  = 'answer'  #Allows column order sorting 
     get_score.short_description = 'Score'  #Renames column head
+
+    def get_total(self, obj):
+        return json.loads(obj.answer).get('total')
+    get_total.admin_order_field  = 'answer'  #Allows column order sorting 
+    get_total.short_description = 'Total'  #Renames column head
+
+    def get_percent(self, obj):
+        # score/total*100
+        answer = json.loads(obj.answer)
+        if answer.get('score') and answer.get('total'):
+            return round( int(answer.get('score')) / int(answer.get('total')) * 100 , 2)
+    get_percent.admin_order_field  = 'answer'  #Allows column order sorting 
+    get_percent.short_description = 'percent'  #Renames column head
+
 
 # Register your models here.
 admin.site.register(Answer, AnswerAdmin)

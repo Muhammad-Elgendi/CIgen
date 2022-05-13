@@ -29,17 +29,18 @@ def view_quiz(request,quiz_id):
     # this quiz before
     ip = request.META.get('REMOTE_ADDR')
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    user_agent = request.META['HTTP_USER_AGENT']
-    seed_str = str(ip)+str(user_agent)+str(x_forwarded_for)
+    user_agent = request.META.get('HTTP_USER_AGENT')
+    cookie = request.COOKIES.get('CIgen_VQ')
+
+    seed_str = str(ip)+str(user_agent)+str(x_forwarded_for)+str(cookie)
 
     # for testing, comment the following, and set any number as seed
-   
     seed = hashlib.sha1(seed_str.encode('utf-8')).hexdigest()
     seed = ''.join([s for s in seed if s.isdigit()])
     seed = int(seed[:9])
 
-    print(ip,user_agent,x_forwarded_for) 
-    print(seed)
+    print(ip, user_agent, cookie, x_forwarded_for) 
+    print("seed:",seed)
 
     try:
         quiz = Quiz.objects.get(pk=quiz_id)
@@ -52,31 +53,46 @@ def view_quiz(request,quiz_id):
 
     if request.method == "GET":
         context = {"form":form,"quiz":quiz, "seed":seed}
-        return render(request,"home/quiz.html",context)
+        response = render(request,"home/quiz.html",context)
+        # check if this is the first visit to the CIgen's quiz
+        if cookie:
+            print("cookie",cookie)
+            cookie = int(cookie)+1            
+            response.set_cookie(key='CIgen_VQ', value=cookie)  
+        else:
+            cookie = 2           
+            response.set_cookie(key='CIgen_VQ', value=cookie) 
+        return response
     
     if request.method == "POST":
         context = {"form":form,"quiz":quiz, "seed":seed}        
         if form.is_valid():
             student_answers = form.cleaned_data
             questions = [q for q in quiz_df.columns if q.lower() not in ['answers','answer','ans'] and quiz_df[q].iloc[0] not in ['#TEXT#','#NUMBER#']]
-            answers = quiz_df['answers']
+            
+            score = None
+            total = None          
 
-            # calculate score for student
-            score = 0
-            total = 0
-            for ques,ans in student_answers.items():
+            # if quiz type not an attendace
+            if 'answers' in quiz_df.columns:
 
-                if 'op'in str(ans) and 'q' in ques:                    
-                    total +=1
-                    question_no = int(ques.split('q')[1])-1
-                    choice = int(ans.split('op')[1])
+                # calculate score for student
+                score = 0
+                total = 0
 
-                    if answers[question_no] == choice:
-                        score +=1 
+                answers = quiz_df['answers']
+                for ques,ans in student_answers.items():
+                    if 'op'in str(ans) and 'q' in ques:                    
+                        total +=1
+                        question_no = int(ques.split('q')[1])-1
+                        choice = int(ans.split('op')[1])
 
-            print("scored : "+str(score))
+                        if answers[question_no] == choice:
+                            score +=1 
 
-            result = "Success" if score >= total/2  or total == 0 else "Fail"
+                print("scored : ",str(score)+"/"+str(total),"ratio : ", str(score/total*100)+"%")
+
+            result = "Success" if score == None or score >= total/2  or total == 0 else "Fail"
 
             student_answers.update({
                 "score":score,
@@ -94,7 +110,16 @@ def view_quiz(request,quiz_id):
 
             return redirect('home:result', answer_id=saved_answer.id)
 
-        return render(request,"home/quiz.html",context)
+        response = render(request,"home/quiz.html",context)
+        # check if this is the first visit to the CIgen's quiz
+        if cookie:
+            print("cookie",cookie)
+            cookie = int(cookie)+1            
+            response.set_cookie(key='CIgen_VQ', value=cookie)  
+        else:
+            cookie = 2           
+            response.set_cookie(key='CIgen_VQ', value=cookie) 
+        return response
 
       
    
@@ -131,6 +156,7 @@ def invite_to_quiz(request,quiz_id):
         return render(request,"home/invite.html",{"quiz":quiz,"form":form})
     elif request.method == 'POST':
         form = InviteForm(request.POST or None)
+        mylist = None
         if form.is_valid():
             links = form.cleaned_data.get('links')
             ips_with_quizes = links.replace('quiz','quiz/'+str(quiz.id))
@@ -140,8 +166,18 @@ def invite_to_quiz(request,quiz_id):
 
             for index, link in enumerate(links):
                 if len(link) > 0:
-                    # Encoding data using make() function
-                    img = qrcode.make(link)
+
+                    qr = qrcode.QRCode(                  
+                        box_size=10,
+                        border=1,
+                    )
+
+                    qr.add_data(link)
+
+                    # QR in color are not compatible with all readers
+                    # img = qr.make_image(fill_color="white", back_color=(95, 207, 128))
+
+                    img = qr.make_image()
 
                     image_file = 'generated/QRcode'+str(index)+".png"
 
@@ -151,7 +187,8 @@ def invite_to_quiz(request,quiz_id):
                     # Saving as an image file
                     img.save('staticfiles/'+image_file)
 
-            return render(request,"home/invite.html",{"quiz":quiz,"qr":QRs})
+            mylist = zip(links , QRs)
+        return render(request,"home/invite.html",{"form":form, "quiz":quiz, "qr": mylist })
     else:
         return redirect("home:index")
 
