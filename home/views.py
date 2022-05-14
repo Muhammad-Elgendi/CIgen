@@ -55,7 +55,7 @@ def view_quiz(request,quiz_id):
 
     if request.method == "GET":
         form = QuizForm(request.POST or None, df=quiz_df, seed=seed, initial={'start': str(timezone.now())})
-        context = {"form":form,"quiz":quiz, "seed":seed}
+        context = {"form":form,"quiz":quiz, "seed":seed,"title":quiz.name}
         response = render(request,"home/quiz.html",context)
         # check if this is the first visit to the CIgen's quiz
         if cookie:
@@ -69,7 +69,7 @@ def view_quiz(request,quiz_id):
     
     if request.method == "POST":
         form = QuizForm(request.POST or None, df=quiz_df, seed=seed)
-        context = {"form":form,"quiz":quiz, "seed":seed}        
+        context = {"form":form,"quiz":quiz, "seed":seed, "title":quiz.name}        
         if form.is_valid():
             submit_time = str(timezone.now())
             student_answers = form.cleaned_data
@@ -159,7 +159,8 @@ def view_result(request,answer_id):
 
         context = {"score":answer.get('score'),
                 "result":answer.get('result'),
-                "total":answer.get('total')
+                "total":answer.get('total'),
+                "title": "Result",
                 }
         return render(request,"home/success.html",context)
     return redirect("home:index")
@@ -172,7 +173,7 @@ def invite_to_quiz(request,quiz_id):
 
     if request.method == 'GET':
         form = InviteForm()
-        return render(request,"home/invite.html",{"quiz":quiz,"form":form})
+        return render(request,"home/invite.html",{"quiz":quiz,"form":form, "title":quiz.name})
     elif request.method == 'POST':
         form = InviteForm(request.POST or None)
         mylist = None
@@ -207,7 +208,7 @@ def invite_to_quiz(request,quiz_id):
                     img.save('staticfiles/'+image_file)
 
             mylist = zip(links , QRs)
-        return render(request,"home/invite.html",{"form":form, "quiz":quiz, "qr": mylist })
+        return render(request,"home/invite.html",{"form":form, "quiz":quiz, "qr": mylist, "title" : quiz.name })
     else:
         return redirect("home:index")
 

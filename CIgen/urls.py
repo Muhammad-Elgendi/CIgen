@@ -22,6 +22,11 @@ from .views import home_page, about_page, contact_page, login_page, register_pag
 from django.conf import settings
 from django.conf.urls.static import static
 
+# change ‘Django administration’ text
+admin.site.site_header = "CIgen Admin"
+admin.site.site_title = "CIgen Admin"
+admin.site.index_title = "Welcome to CIgen Admin Portal"
+
 urlpatterns = [
     path('', include('home.urls')),
     path('dashboard/', include('dashboard.urls')),
