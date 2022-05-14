@@ -4,11 +4,14 @@ from dashboard.models import Quiz, Answer
 from .forms import QuizForm, InviteForm
 from django.contrib import messages
 from django.utils import timezone
+from dateutil.parser import parse
+from datetime import timedelta
 import pandas as pd
 import json
 import qrcode
 import random
 import hashlib
+
 
 
 # Create your views here.
@@ -49,9 +52,9 @@ def view_quiz(request,quiz_id):
 
     # if quiz exists
     quiz_df = pd.read_json(quiz.quiz, orient='split')
-    form = QuizForm(request.POST or None, df=quiz_df, seed=seed)
 
     if request.method == "GET":
+        form = QuizForm(request.POST or None, df=quiz_df, seed=seed, initial={'start': str(timezone.now())})
         context = {"form":form,"quiz":quiz, "seed":seed}
         response = render(request,"home/quiz.html",context)
         # check if this is the first visit to the CIgen's quiz
@@ -65,9 +68,17 @@ def view_quiz(request,quiz_id):
         return response
     
     if request.method == "POST":
+        form = QuizForm(request.POST or None, df=quiz_df, seed=seed)
         context = {"form":form,"quiz":quiz, "seed":seed}        
         if form.is_valid():
+            submit_time = str(timezone.now())
             student_answers = form.cleaned_data
+            time_taked = parse(submit_time) - parse(student_answers.get('start'))
+
+            # to get the "total minutes"
+            time_taked = time_taked / timedelta(minutes=1)
+            time_taked = round(time_taked,2)
+
             questions = [q for q in quiz_df.columns if q.lower() not in ['answers','answer','ans'] and quiz_df[q].iloc[0] not in ['#TEXT#','#NUMBER#']]
             
             score = None
@@ -90,14 +101,22 @@ def view_quiz(request,quiz_id):
                         if answers[question_no] == choice:
                             score +=1 
 
-                print("scored : ",str(score)+"/"+str(total),"ratio : ", str(score/total*100)+"%")
+                print("scored : ",str(score)+"/"+str(total),"percent : ", str(round(score/total*100,2))+"%")
 
             result = "Success" if score == None or score >= total/2  or total == 0 else "Fail"
+
+            # if timed-quiz type
+            if 'time' in quiz_df.columns:
+                accepted_time = int(quiz_df['time'].iloc[0])
+                answer_status = "In time" if time_taked <= accepted_time else "Late"
+                student_answers.update({ 'answer status' : answer_status })
 
             student_answers.update({
                 "score":score,
                 "result":result,
-                "total":total
+                "total":total,
+                "finish":submit_time,
+                "answer time (minutes)": time_taked,
             })
 
             saved_answer, created = Answer.objects.get_or_create(     

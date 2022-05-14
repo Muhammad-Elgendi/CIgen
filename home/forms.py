@@ -11,7 +11,7 @@ class QuizForm(forms.Form):
         random_seed = kwargs.pop('seed')
 
         super().__init__(*args, **kwargs)
-        questions = [q for q in quiz_df.columns if q.lower() not in ['answers','select'] ]
+        questions = [q for q in quiz_df.columns if q.lower() not in ['answers','select','time'] ]
         fields_names = []
 
         # if number of questions to be shown is used
@@ -87,9 +87,15 @@ class QuizForm(forms.Form):
                 else:
                     self.fields['q'+str(num+1)] = forms.IntegerField(required=False,label=questions[num],widget=forms.NumberInput(attrs={"class":"form-control"}))
 
+        # starting time
+        self.fields['start'] = forms.CharField(required=True,widget=forms.HiddenInput())
+
         # apply random shuffling for questions
         random.shuffle(fields_names)
         self.order_fields(fields_names)
+
+
+
 
 
 class InviteForm(forms.Form):
