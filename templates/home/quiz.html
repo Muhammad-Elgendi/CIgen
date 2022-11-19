@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 
+{% block head %}
+<style>
+  .unselectable {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    color: #444444;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 
   <!--Section: Quiz -->
@@ -10,23 +23,55 @@
     <h2 class="h1-responsive font-weight-bold text-center my-4">{{quiz.name}}</h2>
     <!--Section description-->
     <p class="text-center w-responsive mx-auto mb-5">“To be, or not to be: that is the question.”</p>
-
       <div class="row">
       <!--Grid column-->
       <div class="col-md-9 mb-md-0 mb-5 mx-auto">
           <div style="color: #d93025;" class="mb-3">*Required</div>
-          <form autocomplete="off" id="quiz-form" name="quiz-form" method="POST" action="{% url "home:quiz" quiz_id=quiz.id %}">
+          <form autocomplete="off" oncopy="return false" oncut="return false" onpaste="return false" onmousedown="return false" onselectstart="return false" id="quiz-form" class="unselectable" name="quiz-form" method="POST" action="{% url "home:quiz" quiz_id=quiz.id %}">
               {% csrf_token %}
               {{ form }}
               <input type="hidden" name="seed" id="seed" value="{{seed}}">
               <div class="text-center text-md-left mt-3">
-                <button type="button" class="get-started-btn" onclick="this.disabled=true,this.form.submit();">Submit Your Answers</button>
+                <button id="quizsubmitbtn" type="button" class="get-started-btn" onclick="this.disabled=true,this.form.submit();">Submit Your Answers</button>
               </div>
           </form>
       </div>
     </div>
   </section>
 
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="color:#d93025;" id="exampleModalLabel">You have left the quiz</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        If you left the quiz three times or more, it will be considered cheating, and you will not be able to submit it.      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cheating Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="color:#d93025;" id="staticBackdropLabel">You can't submit your answers!</h5>
+      </div>
+      <div class="modal-body" id="staticBackdropBody">
+        You can't submit your answers for the quiz because you left three times.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="get-started-btn" onclick="window.location.reload();">Retake Quiz</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -36,9 +81,68 @@
   <noscript>Sorry, your browser does not support JavaScript!</noscript>
 
   <script>
+    // show images
+
+    {% for question_num, img in images.items %}
+      if (document.querySelector("[for='id_q{{ question_num }}_0']") !== null){
+        document.querySelector("[for='id_q{{ question_num }}_0']").insertAdjacentHTML('beforebegin',
+      '<img class="img-fluid mx-auto d-block mt-5" src="{{ img }}">');
+
+      }else if(document.querySelector("[for='id_q{{ question_num }}']") !== null){
+        document.querySelector("[for='id_q{{ question_num }}']").insertAdjacentHTML('beforebegin',
+      '<img class="img-fluid mx-auto d-block mt-5" src="{{ img }}">');
+
+      }
+     
+    {% endfor %}
+
+    // handle pageshow event
+
     window.addEventListener("pageshow", () => {
-      document.getElementById("quiz-form").reset();               
+      console.log("Pageshow reset");
+      document.getElementById("quiz-form").reset();
+      // this changes the scrolling behavior to "smooth"
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+
+    let leave_count = 0;    
+
+    document.onvisibilitychange = function() {
+      if (document.visibilityState === 'hidden') {
+
+        console.log("onvisibilitychange reset");
+        leave_count += 1;
+        if(leave_count >= 3){
+          // cheating case
+          document.getElementById("quiz-form").reset();  
+          document.getElementById("quizsubmitbtn").disabled=true; 
+          
+          // destroy old modal
+          document.getElementById('exampleModal').remove();
+
+          // remove old quiz
+          document.getElementById('quiz-form').remove();          
+          
+          // show non-closed
+          var cheatingModal = new bootstrap.Modal(document.getElementById('staticBackdrop'), {
+            keyboard: false
+          }) 
+          console.log("Cheating detected.");
+          cheatingModal.show()
+        }
+        document.getElementById("exampleModalLabel").innerText ="You have left the quiz for "+leave_count+" time(s).";
+ 
+        if (leave_count < 3 && !document.getElementById('exampleModal').classList.contains('show')){
+          var myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
+          keyboard: true
+          }) 
+          console.log("Creating modal...");
+          myModal.show()
+        }       
+      
+
+      }
+    };
   </script>
 
 {% endblock %}

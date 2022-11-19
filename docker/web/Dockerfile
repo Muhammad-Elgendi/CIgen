@@ -1,6 +1,13 @@
 # pull official base image
 FROM python:3.9.4-buster
 
+ARG PUID=1000
+ENV PUID ${PUID}
+ARG PGID=1000
+ENV PGID ${PGID}
+
+USER root
+
 # set work directory
 WORKDIR /usr/src/app
 
@@ -18,7 +25,8 @@ COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
 # create the app user
-RUN addgroup --system app && adduser --system --ingroup app app
+RUN addgroup  --gid ${PGID}  app && adduser --uid ${PUID} --ingroup app app
+
 # set work directory
 WORKDIR /usr/src/app
 
@@ -26,10 +34,13 @@ WORKDIR /usr/src/app
 COPY ./entrypoint.sh ../
 
 # chown all the files to the app user
-RUN chown -R app:app ./
+RUN chown -R app:app /usr/src/app
 
 # change to the app user
-USER app
+USER app:app
+
+# set volume folder
+VOLUME /usr/src/app
 
 # run entrypoint.sh
 ENTRYPOINT ["/usr/src/entrypoint.sh"]

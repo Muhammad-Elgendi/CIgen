@@ -1,4 +1,6 @@
 #!/bin/sh
+rm -rf /usr/src/app/public/static_root/
+python3 /usr/src/app/manage.py collectstatic
 
 if [ "$DATABASE" = "postgres" ]
 then

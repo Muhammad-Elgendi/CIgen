@@ -8,11 +8,17 @@ import json
 from django.utils.safestring import mark_safe
 from django.http import FileResponse, HttpResponse
 from io import BytesIO
+import zipfile
+from pathlib import Path
+import os
+import shutil
 
 
 
 class UploadForm(forms.Form):
     file_to_upload = forms.FileField()
+    images_to_upload = forms.FileField(required=False)
+
 
 class QuizAdmin(admin.ModelAdmin):
     list_display = ['name', 'get_view_link', 'get_invite_link', 'created_at']
@@ -97,21 +103,56 @@ class QuizAdmin(admin.ModelAdmin):
             response['Content-Disposition'] = 'attachment; filename=%s' % filename
             return response
 
+    def get_filenames(self,path_to_zip):
+            """ return list of filenames inside of the zip folder """
+            with zipfile.ZipFile(path_to_zip, 'r') as zip:
+                return zip.namelist()
 
     def upload_quiz(self,request):
         df = None
         if request.method == "POST":
             quiz_file = request.FILES["file_to_upload"]
+            if 'images_to_upload' in request.FILES:
+                images_file = request.FILES["images_to_upload"]
+                current_user = request.user
+                images_path = "public/media_root/images/"+str(current_user.id)+"/"+quiz_file.name.split(".")[0].replace(" ","_")+"/"
+
+
+                # remove old images for this quiz if any
+                if os.path.exists(images_path) and os.path.isdir(images_path):
+                    shutil.rmtree(images_path)
+
+                # create quiz images folder if not existed
+                Path(images_path).mkdir(parents=True, exist_ok=True)
+
+                # decompress images file
+                with zipfile.ZipFile(images_file, 'r') as zip_ref:
+                    zip_ref.extractall(images_path)
+                    
+                    # extract images
+                    # for img in zip_ref.namelist():
+                    #     zip_ref.extract(img, images_path)
+                
+                # get images names from compressed file
+                img_names = self.get_filenames(images_file)
             
             try:
                 df = pd.read_excel(quiz_file)
 
-                Quiz.objects.update_or_create(
-                    name = quiz_file.name.split(".")[0],
-                    quiz = df.to_json(orient='split')
-                )
-            except:
+                if 'images_to_upload' in request.FILES:
+                    Quiz.objects.update_or_create(
+                        name = quiz_file.name.split(".")[0],
+                        quiz = df.to_json(orient='split'),
+                        images = json.dumps(img_names)
+                    )
+                else:
+                    Quiz.objects.update_or_create(
+                        name = quiz_file.name.split(".")[0],
+                        quiz = df.to_json(orient='split')
+                    )
+            except Exception as e:
                 messages.warning(request, 'Your File Is Invaild.')                
+                print(e)
 
         form = UploadForm()
         data = {"form":form,

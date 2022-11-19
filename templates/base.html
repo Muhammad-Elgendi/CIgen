@@ -17,7 +17,6 @@
 
   <!-- Favicons -->
   <link href="{% static 'img/favicon.png' %}" rel="icon">
-  <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
 
   {% comment %}
   <!-- Google Fonts -->
@@ -35,6 +34,8 @@
 
   <!-- Template Main CSS File -->
   <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
+
+  {% block head %}{% endblock %}
 
   <!-- =======================================================
   * Template Name: Mentor - v4.7.0
@@ -184,6 +185,7 @@
   <script src="{% static 'assets/vendor/purecounter/purecounter.js' %}"></script>
   <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
   <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.min.js' %}"></script>
   <script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
   <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
 

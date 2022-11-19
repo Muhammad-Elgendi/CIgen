@@ -144,10 +144,13 @@ STATICFILES_DIRS = [
     BASE_DIR / "staticfiles"
 ]
 
+# Path where static files is stored
 STATIC_ROOT = os.path.join(BASE_DIR, "public","static_root")
 
-MEDIA_URL = '/media/'
-
+# Base url to serve media files  
+MEDIA_URL = '/media/'  
+  
+# Path where media is stored  
 MEDIA_ROOT = os.path.join(BASE_DIR, "public","media_root")
 
 # AUTH_USER_MODEL = 'dashboard.User'

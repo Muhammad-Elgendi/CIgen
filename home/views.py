@@ -11,6 +11,8 @@ import json
 import qrcode
 import random
 import hashlib
+from pathlib import Path  
+import json  
 
 
 
@@ -56,6 +58,21 @@ def view_quiz(request,quiz_id):
     if request.method == "GET":
         form = QuizForm(request.POST or None, df=quiz_df, seed=seed, initial={'start': str(timezone.now())})
         context = {"form":form,"quiz":quiz, "seed":seed,"title":quiz.name}
+        
+        # show quiz images if any
+        if quiz.images:
+            context['images'] = json.loads(quiz.images)
+            imgs = {}
+            images_path = "/media/images/"+str(request.user.id)+"/"+quiz.name.replace(" ","_")+"/"
+
+            for img in context['images']:
+                try:
+                    # process images so `question no. : image path`
+                    imgs[int(Path(img).name.split('.')[0])] = images_path+img
+                except Exception as e:
+                    print(e,"when convert image.")
+            context['images'] = imgs
+
         response = render(request,"home/quiz.html",context)
         # check if this is the first visit to the CIgen's quiz
         if cookie:

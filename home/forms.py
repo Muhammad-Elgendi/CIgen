@@ -28,7 +28,7 @@ class QuizForm(forms.Form):
             select_option = str(quiz_df['select'].iloc[0])
 
             if '<=' not in select_option:
-                questions_count = int(select_option)
+                questions_count = int(float(select_option))
                 pool_of_candidate_questions = pd.Series(non_required_questions).sample(n=questions_count, random_state=random_seed, replace=False).unique()
             else:
                 questions_count = int(select_option.split("<=")[1])
@@ -75,17 +75,17 @@ class QuizForm(forms.Form):
             elif(quiz_df[question].iloc[0] == '#TEXT#'):
                 # check if question is required
                 if questions[num][0] == '*':
-                    self.fields['q'+str(num+1)] = forms.CharField(required=True,label=questions[num],widget=forms.Textarea(attrs={"name":'q'+str(num+1),"class":"form-control","placeholder":"Your Answer","rows":"1"}))
+                    self.fields['q'+str(num+1)] = forms.CharField(required=True,label=questions[num],widget=forms.Textarea(attrs={"name":'q'+str(num+1),"class":"form-control mb-3","placeholder":"Your Answer","rows":"1"}))
                 else:
-                    self.fields['q'+str(num+1)] = forms.CharField(required=False,label=questions[num],widget=forms.Textarea(attrs={"name":'q'+str(num+1),"class":"form-control","placeholder":"Your Answer","rows":"1"}))
+                    self.fields['q'+str(num+1)] = forms.CharField(required=False,label=questions[num],widget=forms.Textarea(attrs={"name":'q'+str(num+1),"class":"form-control mb-3","placeholder":"Your Answer","rows":"1"}))
 
             
             # handle text inputs qustions (questions annotated be #NUMBER#)
             elif(quiz_df[question].iloc[0] == '#NUMBER#'):
                 if questions[num][0] == '*':
-                    self.fields['q'+str(num+1)] = forms.IntegerField(required=True,label=questions[num],widget=forms.NumberInput(attrs={"class":"form-control"}))
+                    self.fields['q'+str(num+1)] = forms.IntegerField(required=True,label=questions[num],widget=forms.NumberInput(attrs={"class":"form-control mb-3"}))
                 else:
-                    self.fields['q'+str(num+1)] = forms.IntegerField(required=False,label=questions[num],widget=forms.NumberInput(attrs={"class":"form-control"}))
+                    self.fields['q'+str(num+1)] = forms.IntegerField(required=False,label=questions[num],widget=forms.NumberInput(attrs={"class":"form-control mb-3"}))
 
         # starting time
         self.fields['start'] = forms.CharField(required=True,widget=forms.HiddenInput())
