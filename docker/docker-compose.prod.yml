@@ -25,7 +25,7 @@ services:
     nginx:
         build: ./nginx
         ports:
-            - 8080:80
+            - 80:80
         volumes:
             - ../:/usr/src/app/
         depends_on:

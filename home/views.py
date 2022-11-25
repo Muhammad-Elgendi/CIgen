@@ -30,8 +30,7 @@ def index(request):
 
 
 def view_quiz(request,quiz_id):
-    # TODO check for cookie in the user browser to know if they take
-    # this quiz before
+
     ip = request.META.get('REMOTE_ADDR')
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     user_agent = request.META.get('HTTP_USER_AGENT')
@@ -72,6 +71,11 @@ def view_quiz(request,quiz_id):
                 except Exception as e:
                     print(e,"when convert image.")
             context['images'] = imgs
+        
+        # if timed-quiz type
+        if 'time' in quiz_df.columns:
+            accepted_time = int(quiz_df['time'].iloc[0])
+            context['time'] = accepted_time
 
         response = render(request,"home/quiz.html",context)
         # check if this is the first visit to the CIgen's quiz
@@ -146,6 +150,11 @@ def view_quiz(request,quiz_id):
 
             return redirect('home:result', answer_id=saved_answer.id)
 
+        # if timed-quiz type
+        if 'time' in quiz_df.columns:
+            accepted_time = int(quiz_df['time'].iloc[0])
+            context['time'] = accepted_time
+            
         response = render(request,"home/quiz.html",context)
         # check if this is the first visit to the CIgen's quiz
         if cookie:
