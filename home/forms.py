@@ -30,6 +30,8 @@ class QuizForm(forms.Form):
             if '<=' not in select_option:
                 questions_count = int(float(select_option))
                 pool_of_candidate_questions = pd.Series(non_required_questions).sample(n=questions_count, random_state=random_seed, replace=False).unique()
+                # while(questions_count != len(pool_of_candidate_questions)):
+                #     pool_of_candidate_questions = pd.Series(non_required_questions).sample(n=questions_count, random_state=random_seed, replace=False).unique()
             else:
                 questions_count = int(select_option.split("<=")[1])
                 pool_of_candidate_questions = pd.Series(non_required_questions).sample(n=questions_count, random_state=random_seed, replace=True).unique()
@@ -89,9 +91,12 @@ class QuizForm(forms.Form):
 
         # starting time
         self.fields['start'] = forms.CharField(required=True,widget=forms.HiddenInput())
-
+        # random seed
+        self.fields['seed'] = forms.CharField(required=True,widget=forms.HiddenInput())
+        
         # apply random shuffling for questions
-        random.shuffle(fields_names)
+        # random.shuffle(fields_names)
+        random.Random(random_seed).shuffle(fields_names)
         self.order_fields(fields_names)
 
 

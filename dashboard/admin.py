@@ -115,7 +115,7 @@ class QuizAdmin(admin.ModelAdmin):
             if 'images_to_upload' in request.FILES:
                 images_file = request.FILES["images_to_upload"]
                 current_user = request.user
-                images_path = "public/media_root/images/"+str(current_user.id)+"/"+quiz_file.name.split(".")[0].replace(" ","_")+"/"
+                images_path = "public/media_root/images/"+quiz_file.name.split(".")[0].replace(" ","_")+"/"
 
 
                 # remove old images for this quiz if any
