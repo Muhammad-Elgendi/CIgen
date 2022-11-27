@@ -137,7 +137,7 @@ class QuizAdmin(admin.ModelAdmin):
                 img_names = self.get_filenames(images_file)
             
             try:
-                df = pd.read_excel(quiz_file)
+                df = pd.read_excel(quiz_file, dtype=str)
 
                 if 'images_to_upload' in request.FILES:
                     Quiz.objects.update_or_create(
