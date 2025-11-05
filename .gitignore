@@ -3,7 +3,7 @@
 .env.prod
 public/
 staticfiles/generated/
-
+.talismanrc
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
