@@ -263,9 +263,10 @@
   }
 
   .welcome-screen h1 {
-    font-size: 3rem;
+    font-size: 2rem;
     margin-bottom: 1rem;
     font-weight: 700;
+    color: #5fcf80;
   }
 
   .welcome-screen p {
@@ -345,10 +346,6 @@
     
     .question-text {
       font-size: 20px;
-    }
-    
-    .welcome-screen h1 {
-      font-size: 2rem;
     }
     
     .progress-text {
@@ -647,11 +644,11 @@
           });
           questionHTML += '</div>';
         } else if (question.type === 'textarea') {
-          questionHTML += `<textarea class="text-input" name="${question.id}" placeholder="Your answer..." rows="4" onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')" onblur="checkAnswer('${question.id}')">${question.value || ''}</textarea>`;
+          questionHTML += `<textarea class="text-input" name="${question.id}" placeholder="Your answer..." rows="4" onkeyup="checkAnswerWithThis(this)" oninput="checkAnswerWithThis(this)" onchange="checkAnswerWithThis(this)" onblur="checkAnswerWithThis(this)">${question.value || ''}</textarea>`;
         } else if (question.type === 'number') {
-          questionHTML += `<input type="number" class="number-input" name="${question.id}" placeholder="Enter a number" onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')" onblur="checkAnswer('${question.id}')">`;
+          questionHTML += `<input type="number" class="number-input" name="${question.id}" placeholder="Enter a number" onkeyup="checkAnswerWithThis(this)" oninput="checkAnswerWithThis(this)" onchange="checkAnswerWithThis(this)" onblur="checkAnswerWithThis(this)">`;
         } else {
-          questionHTML += `<input type="text" class="text-input" name="${question.id}" placeholder="Your answer..." onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')" onblur="checkAnswer('${question.id}')">`;
+          questionHTML += `<input type="text" class="text-input" name="${question.id}" placeholder="Your answer..." onkeyup="checkAnswerWithThis(this)" oninput="checkAnswerWithThis(this)" onchange="checkAnswerWithThis(this)" onblur="checkAnswerWithThis(this)">`;
         }
         
         questionHTML += '</div>';
@@ -697,41 +694,38 @@
       }
     }
 
-    // Check if answer is provided
-    function checkAnswer(fieldName) {
-      console.log(`=== checkAnswer called for ${fieldName} ===`);
+    // Check if answer is provided using the actual field element
+    function checkAnswerWithThis(field) {
+      const fieldName = field.name;
+      console.log(`=== checkAnswerWithThis called for ${fieldName} ===`);
+      console.log(`Field element:`, field);
+      console.log(`Field value:`, `"${field.value}"`);
       
       // Add a small delay to ensure the DOM is updated
       setTimeout(() => {
-        const field = document.querySelector(`[name="${fieldName}"]`);
         const questionIndex = questions.findIndex(q => q.id === fieldName);
         const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
         
-        console.log(`Field found:`, !!field);
         console.log(`Question index:`, questionIndex);
         console.log(`Next button found:`, !!nextBtn);
-        
-        if (field) {
-          console.log(`Field type:`, field.type);
-          console.log(`Field tag name:`, field.tagName);
-          console.log(`Field value:`, `"${field.value}"`);
-          console.log(`Field value length:`, field.value.length);
-          console.log(`Field value type:`, typeof field.value);
-        }
         
         if (nextBtn) {
           console.log(`Next button current state:`, nextBtn.disabled);
         }
         
-        if (nextBtn && field) {
+        if (nextBtn) {
           let hasValue = false;
           
           if (field.type === 'number') {
-            // Simple and direct number validation
+            // More robust number validation
             const val = field.value;
-            console.log(`Number validation - val: "${val}", typeof val: ${typeof val}`);
-            hasValue = val && val.toString().trim() !== '' && !isNaN(val) && val !== '';
+            console.log(`Number validation - val: "${val}", typeof val: ${typeof val}, val.length: ${val ? val.length : 'null'}`);
+            
+            // Check if value exists and is a valid number
+            hasValue = val !== null && val !== undefined && val.toString().trim() !== '' && val !== '' && !isNaN(val);
+            
             console.log(`Number field check: value="${field.value}", isNaN=${isNaN(field.value)}, hasValue=${hasValue}`);
+            console.log(`Individual checks: val !== null: ${val !== null}, val !== undefined: ${val !== undefined}, val.toString().trim() !== '': ${val.toString().trim() !== ''}, val !== '': ${val !== ''}, !isNaN(val): ${!isNaN(val)}`);
           } else if (field.type === 'text' || field.tagName === 'TEXTAREA') {
             hasValue = field.value && field.value.trim() !== '';
             console.log(`Text/textarea check: trimmed value="${field.value ? field.value.trim() : ''}", hasValue=${hasValue}`);
@@ -750,6 +744,72 @@
             console.log(`❌ Next button DISABLED for ${fieldName}`);
           }
         } else {
+          console.log(`❌ Next button not found for ${fieldName}`);
+        }
+        
+        console.log(`=== End checkAnswerWithThis for ${fieldName} ===`);
+      }, 50); // 50ms delay
+    }
+
+    // Check if answer is provided
+    function checkAnswer(fieldName) {
+      console.log(`=== checkAnswer called for ${fieldName} ===`);
+      
+      // Increase delay to ensure the DOM is updated after input
+      setTimeout(() => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        const questionIndex = questions.findIndex(q => q.id === fieldName);
+        const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+        
+        console.log(`Field found:`, !!field);
+        console.log(`Question index:`, questionIndex);
+        console.log(`Next button found:`, !!nextBtn);
+        
+        if (field) {
+          console.log(`Field type:`, field.type);
+          console.log(`Field tag name:`, field.tagName);
+          console.log(`Field value:`, `"${field.value}"`);
+          console.log(`Field value length:`, field.value.length);
+          console.log(`Field value type:`, typeof field.value);
+          console.log(`All number inputs with same name:`, document.querySelectorAll(`[name="${fieldName}"]`));
+        }
+        
+        if (nextBtn) {
+          console.log(`Next button current state:`, nextBtn.disabled);
+        }
+        
+        if (nextBtn && field) {
+          let hasValue = false;
+          
+          if (field.type === 'number') {
+            // More robust number validation with better debugging
+            const val = field.value;
+            console.log(`Number validation - val: "${val}", typeof val: ${typeof val}, val.length: ${val ? val.length : 'null'}`);
+            
+            // Check if value exists and is a valid number
+            hasValue = val !== null && val !== undefined && val.toString().trim() !== '' && val !== '' && !isNaN(val);
+            
+            console.log(`Number field check: value="${field.value}", isNaN=${isNaN(field.value)}, hasValue=${hasValue}`);
+            console.log(`Individual checks: val !== null: ${val !== null}, val !== undefined: ${val !== undefined}, val.toString().trim() !== '': ${val.toString().trim() !== ''}, val !== '': ${val !== ''}, !isNaN(val): ${!isNaN(val)}`);
+          } else if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+            hasValue = field.value && field.value.trim() !== '';
+            console.log(`Text/textarea check: trimmed value="${field.value ? field.value.trim() : ''}", hasValue=${hasValue}`);
+          } else {
+            hasValue = field.value && field.value.trim() !== '';
+            console.log(`Other field check: trimmed value="${field.value ? field.value.trim() : ''}", hasValue=${hasValue}`);
+          }
+          
+          console.log(`Final hasValue: ${hasValue}, setting nextBtn.disabled to ${!hasValue}`);
+          
+          if (hasValue) {
+            nextBtn.disabled = false;
+            console.log(`✅ Next button ENABLED for ${fieldName}`);
+          } else {
+            nextBtn.disabled = true;
+            console.log(`❌ Next button DISABLED for ${fieldName}`);
+          }
+        } else {
+          console.log(`Field or next button not found, trying fallback...`);
           // If we can't find the specific next button, try to find any next button in the current slide
           const currentSlide = field ? field.closest('.question-slide') : null;
           if (currentSlide) {
@@ -759,7 +819,7 @@
               
               if (field.type === 'number') {
                 const val = field.value;
-                hasValue = val && val.toString().trim() !== '' && !isNaN(val) && val !== '';
+                hasValue = val !== null && val !== undefined && val.toString().trim() !== '' && val !== '' && !isNaN(val);
               } else if (field.type === 'text' || field.tagName === 'TEXTAREA') {
                 hasValue = field.value && field.value.trim() !== '';
               } else {
@@ -776,7 +836,7 @@
         }
         
         console.log(`=== End checkAnswer for ${fieldName} ===`);
-      }, 10); // 10ms delay
+      }, 50); // Increased delay to 50ms
     }
 
     // Navigation functions
