@@ -115,6 +115,10 @@
   .quiz-field label {
     display: none;
   }
+  
+  .quiz-field .radio-label {
+    display: block;
+  }
 
   .radio-options {
     display: flex;
@@ -512,107 +516,32 @@
       // Debug: Log the HTML structure
       console.log('Original form HTML:', originalForm.innerHTML);
       
-      // Try different approaches to find form fields
+      // Get all elements in the form
+      const allElements = Array.from(originalForm.children);
+      console.log('Direct children:', allElements.length);
       
-      // Approach 1: Look for direct children
-      let fieldGroups = Array.from(originalForm.children);
-      console.log('Direct children:', fieldGroups.length);
-      
-      // Approach 2: If no children, look for all elements
-      if (fieldGroups.length === 0) {
-        fieldGroups = originalForm.querySelectorAll('*');
-        console.log('All elements:', fieldGroups.length);
-      }
-      
-      // Approach 3: Look for common Django form patterns
-      if (fieldGroups.length === 0) {
-        // Look for labels and their associated inputs
-        const labels = originalForm.querySelectorAll('label');
-        console.log('Labels found:', labels.length);
+      // Process elements to find question-label pairs
+      let i = 0;
+      while (i < allElements.length) {
+        const element = allElements[i];
         
-        labels.forEach((label) => {
-          const forId = label.getAttribute('for');
-          if (forId) {
-            const input = document.getElementById(forId);
-            if (input && input.type !== 'hidden') {
-              const questionText = label.textContent.replace('*', '').trim();
-              const isRequired = label.textContent.includes('*');
-              
-              let questionData = {
-                id: input.name,
-                text: questionText,
-                required: isRequired,
-                type: input.type,
-                originalGroup: label.parentElement
-              };
-              
-              // Handle radio buttons
-              if (input.type === 'radio') {
-                const radioName = input.name;
-                const radioInputs = originalForm.querySelectorAll(`input[name="${radioName}"][type="radio"]`);
-                const options = [];
-                
-                radioInputs.forEach((radio) => {
-                  const radioLabel = originalForm.querySelector(`label[for="${radio.id}"]`);
-                  if (radioLabel) {
-                    options.push({
-                      value: radio.value,
-                      label: radioLabel.textContent.trim()
-                    });
-                  }
-                });
-                
-                questionData.type = 'radio';
-                questionData.options = options;
-                
-                // Only add once per radio group
-                if (!questions.find(q => q.id === radioName)) {
-                  questions.push(questionData);
-                }
-              } else {
-                questions.push(questionData);
-              }
-            }
-          }
-        });
-      } else {
-        // Process field groups
-        fieldGroups.forEach((group, index) => {
-          console.log(`Processing group ${index}:`, group);
+        // Check if this is a label for a radio question
+        if (element.tagName === 'LABEL' && element.getAttribute('for')) {
+          const forId = element.getAttribute('for');
+          const questionText = element.textContent.replace('*', '').trim();
+          const isRequired = element.textContent.includes('*');
           
-          const label = group.querySelector('label');
-          const inputs = group.querySelectorAll('input:not([type="hidden"]), textarea');
-          
-          console.log(`Group ${index} - Label:`, label, 'Inputs:', inputs.length);
-          
-          if (label && inputs.length > 0) {
-            const questionText = label.textContent.replace('*', '').trim();
-            const isRequired = label.textContent.includes('*') || group.querySelector('.errorlist');
-            const firstInput = inputs[0];
-            
-            console.log(`Question text: "${questionText}", Required: ${isRequired}, Input name: ${firstInput.name}`);
-            
-            // Skip non-question fields
-            if (!firstInput.name || firstInput.name === 'start' || firstInput.name === 'seed') {
-              console.log('Skipping non-question field');
-              return;
-            }
-            
-            let questionData = {
-              id: firstInput.name,
-              text: questionText,
-              required: isRequired,
-              type: firstInput.type,
-              originalGroup: group
-            };
-            
-            // Handle radio buttons
-            if (firstInput.type === 'radio') {
+          // Look ahead for the corresponding radio group
+          let nextElement = allElements[i + 1];
+          if (nextElement && nextElement.tagName === 'UL') {
+            // This is a radio question
+            const radioInputs = nextElement.querySelectorAll('input[type="radio"]');
+            if (radioInputs.length > 0) {
+              const radioName = radioInputs[0].name;
               const options = [];
-              const radioInputs = group.querySelectorAll('input[type="radio"]');
               
               radioInputs.forEach((radio) => {
-                const radioLabel = group.querySelector(`label[for="${radio.id}"]`);
+                const radioLabel = nextElement.querySelector(`label[for="${radio.id}"]`);
                 if (radioLabel) {
                   options.push({
                     value: radio.value,
@@ -621,15 +550,60 @@
                 }
               });
               
-              questionData.type = 'radio';
-              questionData.options = options;
-              console.log('Radio options:', options);
+              questions.push({
+                id: radioName,
+                text: questionText,
+                required: isRequired,
+                type: 'radio',
+                options: options,
+                originalGroup: element.parentElement
+              });
+              
+              console.log(`Added radio question: ${questionText} with ${options.length} options`);
+              i += 2; // Skip the UL element
+              continue;
             }
-            
-            questions.push(questionData);
-            console.log('Added question:', questionData);
           }
-        });
+          
+          // Check if this is a label for text/number input
+          const inputElement = document.getElementById(forId);
+          if (inputElement && (inputElement.type === 'text' || inputElement.type === 'number' || inputElement.tagName === 'TEXTAREA')) {
+            questions.push({
+              id: inputElement.name,
+              text: questionText,
+              required: isRequired,
+              type: inputElement.tagName === 'TEXTAREA' ? 'textarea' : inputElement.type,
+              originalGroup: element.parentElement
+            });
+            
+            console.log(`Added text/number question: ${questionText}`);
+            i++;
+            continue;
+          }
+        }
+        
+        // Check if this is a standalone input (text/number/textarea)
+        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+          const input = element;
+          if (input.type !== 'hidden' && input.name && input.name !== 'start' && input.name !== 'seed') {
+            // Find the label for this input
+            const label = originalForm.querySelector(`label[for="${input.id}"]`);
+            const questionText = label ? label.textContent.replace('*', '').trim() : input.name;
+            const isRequired = label ? label.textContent.includes('*') : false;
+            
+            questions.push({
+              id: input.name,
+              text: questionText,
+              required: isRequired,
+              type: input.tagName === 'TEXTAREA' ? 'textarea' : input.type,
+              originalGroup: element.parentElement
+            });
+            
+            console.log(`Added standalone input question: ${questionText}`);
+          }
+        }
+        
+        i++;
       }
       
       totalQuestions = questions.length;
@@ -673,11 +647,11 @@
           });
           questionHTML += '</div>';
         } else if (question.type === 'textarea') {
-          questionHTML += `<textarea class="text-input" name="${question.id}" placeholder="Your answer..." rows="4" oninput="checkAnswer('${question.id}')"></textarea>`;
+          questionHTML += `<textarea class="text-input" name="${question.id}" placeholder="Your answer..." rows="4" onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')">${question.value || ''}</textarea>`;
         } else if (question.type === 'number') {
-          questionHTML += `<input type="number" class="number-input" name="${question.id}" placeholder="Enter a number" oninput="checkAnswer('${question.id}')">`;
+          questionHTML += `<input type="number" class="number-input" name="${question.id}" placeholder="Enter a number" onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')">`;
         } else {
-          questionHTML += `<input type="text" class="text-input" name="${question.id}" placeholder="Your answer..." oninput="checkAnswer('${question.id}')">`;
+          questionHTML += `<input type="text" class="text-input" name="${question.id}" placeholder="Your answer..." onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')">`;
         }
         
         questionHTML += '</div>';
@@ -696,6 +670,15 @@
         slide.innerHTML = questionHTML;
         container.appendChild(slide);
       });
+      
+      // Initialize all input fields after a short delay
+      setTimeout(() => {
+        questions.forEach((question) => {
+          if (question.type !== 'radio') {
+            checkAnswer(question.id);
+          }
+        });
+      }, 100);
     }
 
     // Select radio option
@@ -716,15 +699,57 @@
 
     // Check if answer is provided
     function checkAnswer(fieldName) {
-      const field = document.querySelector(`[name="${fieldName}"]`);
-      const questionIndex = questions.findIndex(q => q.id === fieldName);
-      const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+      console.log(`=== checkAnswer called for ${fieldName} ===`);
       
-      if (nextBtn && field.value.trim() !== '') {
-        nextBtn.disabled = false;
-      } else if (nextBtn) {
-        nextBtn.disabled = true;
-      }
+      // Add a small delay to ensure the DOM is updated
+      setTimeout(() => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        const questionIndex = questions.findIndex(q => q.id === fieldName);
+        const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+        
+        console.log(`Field found:`, !!field);
+        console.log(`Question index:`, questionIndex);
+        console.log(`Next button found:`, !!nextBtn);
+        
+        if (field) {
+          console.log(`Field type:`, field.type);
+          console.log(`Field tag name:`, field.tagName);
+          console.log(`Field value:`, `"${field.value}"`);
+          console.log(`Field value length:`, field.value.length);
+        }
+        
+        if (nextBtn) {
+          console.log(`Next button current state:`, nextBtn.disabled);
+        }
+        
+        if (nextBtn && field) {
+          let hasValue = false;
+          
+          if (field.type === 'number') {
+            hasValue = field.value !== '' && field.value !== null && !isNaN(field.value);
+            console.log(`Number field check: value="${field.value}", isNaN=${isNaN(field.value)}, hasValue=${hasValue}`);
+          } else if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+            hasValue = field.value.trim() !== '';
+            console.log(`Text/textarea check: trimmed value="${field.value.trim()}", hasValue=${hasValue}`);
+          } else {
+            hasValue = field.value.trim() !== '';
+            console.log(`Other field check: trimmed value="${field.value.trim()}", hasValue=${hasValue}`);
+          }
+          
+          if (hasValue) {
+            nextBtn.disabled = false;
+            console.log(`✅ Next button ENABLED for ${fieldName}`);
+          } else {
+            nextBtn.disabled = true;
+            console.log(`❌ Next button DISABLED for ${fieldName}`);
+          }
+        } else if (nextBtn) {
+          nextBtn.disabled = true;
+          console.log(`❌ Next button disabled for ${fieldName} (field not found)`);
+        }
+        
+        console.log(`=== End checkAnswer for ${fieldName} ===`);
+      }, 10); // 10ms delay
     }
 
     // Navigation functions
@@ -1027,6 +1052,35 @@
         submitBtn.textContent = 'Submitting...';
       }
     });
+
+    // Debug function - call this from browser console
+    function debugField(fieldName) {
+      console.log(`=== DEBUGGING FIELD: ${fieldName} ===`);
+      const field = document.querySelector(`[name="${fieldName}"]`);
+      const questionIndex = questions.findIndex(q => q.id === fieldName);
+      const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+      
+      console.log(`Field element:`, field);
+      console.log(`Field exists:`, !!field);
+      console.log(`Field type:`, field?.type);
+      console.log(`Field tag:`, field?.tagName);
+      console.log(`Field value:`, field?.value);
+      console.log(`Field value trimmed:`, field?.value?.trim());
+      console.log(`Question index:`, questionIndex);
+      console.log(`Next button:`, nextBtn);
+      console.log(`Next button disabled:`, nextBtn?.disabled);
+      
+      // Test the conditions manually
+      if (field?.type === 'number') {
+        const hasValue = field.value !== '' && field.value !== null && !isNaN(field.value);
+        console.log(`Number field hasValue:`, hasValue, `(value="${field.value}", isNaN=${isNaN(field.value)})`);
+      } else if (field?.type === 'text' || field?.tagName === 'TEXTAREA') {
+        const hasValue = field.value.trim() !== '';
+        console.log(`Text/textarea hasValue:`, hasValue, `(trimmed="${field.value.trim()}")`);
+      }
+      
+      console.log(`=== END DEBUG ===`);
+    }
 
     // Handle pageshow event
     window.addEventListener("pageshow", () => {

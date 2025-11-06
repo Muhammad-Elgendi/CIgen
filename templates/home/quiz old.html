@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+  .errorlist{
+    color:#d93025;
+  }
+  ul{
+    list-style-type: none;
+  }
+  .unselectable {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    color: #444444;
+  }
+
+  {%  if time %}
+
+  /* countdown timer */
+  #countdown-timer {
+  }
+  #countdown-timer label {
+    clear: both;  
+    font-size:0.4em;
+    color:#000;
+  }
+  #countdown-timer span {
+    background-color: transparent;
+    color: #5fcf80;
+    font-size: 2em;
+    font-weight: normal;
+    text-align: center;
+    width: 33%;
+    display: block;
+    float: left;
+    border-right:1px solid #ccc;
+    padding-left:2%;
+  }
+  #countdown-timer span:last-child {
+    border-right:none;
+  }
+    
+  @media (max-width:1199px) {
+    #countdown-timer label {
+      display:block;
+    }
+  }
+
+  {% endif %}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <!--Section: Quiz -->
+  <section class="my-5">
+    <div class="container">
+
+    <!--Section heading-->
+    <h2 class="h1-responsive font-weight-bold text-center my-4">{{quiz.name}}</h2>
+    <!--Section description-->
+    <p class="text-center w-responsive mx-auto mb-5">“To be, or not to be: that is the question.”</p>
+
+    <!-- <section class="before-quiz d-flex justify-content-center align-items-center">
+      <div class="before-quiz container position-relative" data-aos="zoom-in" data-aos-delay="100">
+        <h2>Ready to take your quiz? </h2>
+        <a href="#" onclick="startQuiz()" class="get-started-btn mx-0">Start Quiz</a>
+      </div>
+    </section> -->
+
+    <div class="row">
+      <!--Grid column-->
+      <!-- style="display: None;" -->
+      <div class="col-md-9 mb-md-0 mb-5 mx-auto" id="quiz-container">
+          <div style="color: #d93025;" class="mb-3">* Required</div> 
+          <!-- onmousedown="return false" onselectstart="return false" -->
+          <form autocomplete="off" oncopy="return false" oncut="return false" onpaste="return false" id="quiz-form" class="unselectable" name="quiz-form" method="POST" action="{% url "home:quiz" quiz_id=quiz.id %}">
+              {% csrf_token %}
+              {{ form }}
+              <input type="hidden" name="seed" id="seed" value="{{seed}}">
+              <div class="text-center text-md-left mt-3">
+                <button id="quizsubmitbtn" type="button" class="get-started-btn" onclick="this.disabled=true,this.form.checkValidity(),this.form.submit();">Submit Your Answers</button>
+              </div>
+          </form>
+      </div>
+    </div>
+  </section>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="color:#d93025;" id="exampleModalLabel">You have left the quiz</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        If you left the quiz three times or more, it will be considered cheating, and you will not be able to submit it.      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cheating Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="color:#d93025;" id="staticBackdropLabel">You can't submit your answers!</h5>
+      </div>
+      <div class="modal-body" id="staticBackdropBody">
+        You can't submit your answers because you left the quiz.
+      </div>
+      <div class="modal-footer">
+        <a class="get-started-btn" href="{% url 'home:quiz' quiz.id %}">Retake Quiz</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+  {{ block.super }}
+
+  <noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+  <script>
+
+    // scroll to form error if any
+    {% if form.is_bound %}
+
+      function scrollToTargetAdjusted(selector){
+        var element = document.querySelector(selector);
+        var headerOffset = 150;
+        var elementPosition = element.getBoundingClientRect().top;
+        var offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // document.querySelector(".errorlist").scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollToTargetAdjusted(".errorlist");
+      });
+
+    {% endif %}
+
+    // start and show quiz
+    function startQuiz(){
+      // document.querySelectorAll('.before-quiz').forEach(function(element) {
+      //   // Now do something with my element
+      //   element.remove();
+      // });
+      // document.getElementById("quiz-container").style.display = "block"; 
+      // show countdown timer
+      document.getElementById("countdown-timer").style.display = "block"; 
+      document.querySelector("#header div:nth-child(2)").innerHTML = '';
+
+      {%  if time %}
+      updateTimer();      
+      {% endif %}
+      
+      // update start time
+      // document.querySelector("#id_start").value = new Date().toISOString();
+    }
+
+    function actionOnCheating(){
+      document.getElementById("quiz-form").reset();  
+      document.getElementById("quizsubmitbtn").disabled=true; 
+      
+      // destroy old modal
+      document.getElementById('exampleModal').remove();
+
+      // remove quiz
+      document.getElementById('quiz-container').remove();          
+      
+      // show non-closed
+      var cheatingModal = new bootstrap.Modal(document.getElementById('staticBackdrop'), {
+        keyboard: false
+      }) 
+      cheatingModal.show()
+    }
+
+    // handle inactivity case
+  var inactivityTime = function () {
+    var time;
+
+    function resetTimer() {
+      clearTimeout(time);
+      time = setTimeout(actionOnCheating, 45*1000);
+      // 1000 milliseconds = 1 second
+    }
+
+    window.addEventListener('load', resetTimer, true);
+    var events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+      events.forEach(function(name) {
+      window.addEventListener(name, resetTimer, true);
+    });
+
+  };
+
+  {%  if time %}
+
+    // show countdown timer
+    document.querySelector("#header").insertAdjacentHTML('afterbegin',
+      ' <div id="countdown-timer" style="display: None;"></div>');
+
+    function updateTimer(){
+      // update timer
+      // set the date we're counting down to
+      var target_date = new Date(new Date(document.querySelector("#id_start").value).getTime() + {{ time }}*60000).getTime();
+      
+      // variables for time units
+      var days, hours, minutes, seconds;
+        
+      // get tag element
+      var countdown = document.getElementById('countdown-timer');
+        
+      // update the tag with id "countdown" every 1 second
+      setInterval(function () {
+        
+          // find the amount of "seconds" between now and target
+          var current_date = new Date().getTime();
+          var seconds_left = (target_date - current_date) / 1000;
+        
+          // do some time calculations
+          days = parseInt(seconds_left / 86400);
+          seconds_left = seconds_left % 86400;
+            
+          hours = parseInt(seconds_left / 3600);
+          seconds_left = seconds_left % 3600;
+            
+          minutes = parseInt(seconds_left / 60);
+          seconds = parseInt(seconds_left % 60);
+            
+          // format countdown string + set tag value
+        
+          // to add days, uncomment next line  
+          // <span class="days">' + days +  ' <label>Days</label></span>      
+          countdown.innerHTML = '<span class="hours">' + hours + ' <label>Hours</label></span><span class="minutes">'
+          + minutes + ' <label>Minutes</label></span>'+
+        ' <span class="seconds">' + seconds + ' <label>Seconds</label></span>';  
+        
+      }, 1000);
+
+    }
+    
+
+  {% endif %}
+
+    // show images
+    {% for question_num, img in images.items %}
+      if (document.querySelector("[for='id_q{{ question_num }}_0']") !== null){
+        document.querySelector("[for='id_q{{ question_num }}_0']").insertAdjacentHTML('beforebegin',
+      '<img class="img-fluid mx-auto d-block mt-5" src="{{ img }}">');
+
+      }else if(document.querySelector("[for='id_q{{ question_num }}']") !== null){
+        document.querySelector("[for='id_q{{ question_num }}']").insertAdjacentHTML('beforebegin',
+      '<img class="img-fluid mx-auto d-block mt-5" src="{{ img }}">');
+
+      }
+     
+    {% endfor %}
+
+    // handle pageshow event
+
+    window.addEventListener("pageshow", () => {
+      console.log("Pageshow reset");
+      document.getElementById("quiz-form").reset();
+      // this changes the scrolling behavior to "smooth"
+      // window.scrollTo({ top: 0, behavior: 'smooth' });
+      startQuiz();
+      inactivityTime();
+
+    });
+
+    let leave_count = 0;    
+
+    document.onvisibilitychange = function() {
+      if (document.visibilityState === 'hidden') {
+
+        console.log("onvisibilitychange reset");
+        leave_count += 1;
+        if(leave_count >= 3){
+          // cheating case
+          actionOnCheating();
+        }
+        document.getElementById("exampleModalLabel").innerText ="You have left the quiz for "+leave_count+" time(s).";
+ 
+        if (leave_count < 3 && !document.getElementById('exampleModal').classList.contains('show')){
+          var myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
+          keyboard: true
+          }) 
+          console.log("Creating modal...");
+          myModal.show()
+        }  
+      }
+    };  
+
+
+  </script>
+
+{% endblock %}

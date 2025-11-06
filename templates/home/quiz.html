@@ -4,6 +4,7 @@
 <style>
   .errorlist{
     color:#d93025;
+    display: none;
   }
   ul{
     list-style-type: none;
@@ -17,35 +18,386 @@
     color: #444444;
   }
 
+  /* Typeform-style quiz container */
+  .typeform-quiz {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .quiz-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Progress bar */
+  .progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1000;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: #5fcf80;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(95, 207, 128, 0.5);
+  }
+
+  .progress-text {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-weight: 600;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+
+  /* Question slides */
+  .question-slide {
+    display: none;
+    opacity: 0;
+    transform: translateX(100px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    margin-top: 100px;
+    min-height: 400px;
+    position: relative;
+  }
+
+  .question-slide.active {
+    display: block;
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .question-slide.prev {
+    transform: translateX(-100px);
+  }
+
+  .question-number {
+    color: #5fcf80;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .question-text {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2rem;
+    line-height: 1.4;
+  }
+
+  /* Form elements styling */
+  .quiz-field {
+    margin-bottom: 2rem;
+  }
+
+  .quiz-field label {
+    display: none;
+  }
+  
+  .quiz-field .radio-label {
+    display: block;
+  }
+
+  .radio-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .radio-option {
+    position: relative;
+    cursor: pointer;
+    padding: 1.2rem 1.5rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: white;
+  }
+
+  .radio-option:hover {
+    border-color: #5fcf80;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(95, 207, 128, 0.2);
+  }
+
+  .radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+  }
+
+  .radio-option.selected {
+    border-color: #5fcf80;
+    background: linear-gradient(135deg, rgba(95, 207, 128, 0.1) 0%, rgba(95, 207, 128, 0.05) 100%);
+  }
+
+  .radio-option .radio-label {
+    font-size: 16px;
+    color: #333;
+    margin-left: 30px;
+    position: relative;
+  }
+
+  .radio-option .radio-label:before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+
+  .radio-option.selected .radio-label:before {
+    border-color: #5fcf80;
+    background: #5fcf80;
+  }
+
+  .radio-option.selected .radio-label:after {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+  }
+
+  .text-input, .number-input {
+    width: 100%;
+    padding: 1.2rem 1.5rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+  }
+
+  .text-input:focus, .number-input:focus {
+    outline: none;
+    border-color: #5fcf80;
+    box-shadow: 0 0 0 3px rgba(95, 207, 128, 0.1);
+  }
+
+  /* Navigation buttons */
+  .quiz-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 1rem;
+  }
+
+  .nav-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .prev-btn {
+    background: transparent;
+    color: #666;
+    border: 2px solid #e0e0e0;
+  }
+
+  .prev-btn:hover {
+    background: #f5f5f5;
+  }
+
+  .next-btn, .submit-btn {
+    background: #5fcf80;
+    color: white;
+    border: 2px solid #5fcf80;
+  }
+
+  .next-btn:hover, .submit-btn:hover {
+    background: #4fb870;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(95, 207, 128, 0.3);
+  }
+
+  .next-btn:disabled, .submit-btn:disabled {
+    background: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Welcome screen */
+  .welcome-screen {
+    text-align: center;
+    color: white;
+    padding: 3rem;
+  }
+
+  .welcome-screen h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+
+  .welcome-screen p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+
+  .start-btn {
+    background: white;
+    color: #5fcf80;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .start-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Completion screen */
+  .completion-screen {
+    text-align: center;
+    color: white;
+    padding: 3rem;
+  }
+
+  .completion-screen h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .completion-screen p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+
+  /* Error highlighting */
+  .quiz-field.error .radio-option {
+    border-color: #d93025;
+    animation: shake 0.5s;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  /* Image styling */
+  .question-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .quiz-wrapper {
+      padding: 1rem;
+    }
+    
+    .question-slide {
+      padding: 2rem 1.5rem;
+      margin-top: 80px;
+    }
+    
+    .question-text {
+      font-size: 20px;
+    }
+    
+    .welcome-screen h1 {
+      font-size: 2rem;
+    }
+    
+    .progress-text {
+      top: 60px;
+      right: 10px;
+    }
+  }
+
   {%  if time %}
 
   /* countdown timer */
   #countdown-timer {
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 15px;
+    border-radius: 8px;
   }
+  
   #countdown-timer label {
     clear: both;  
-    font-size:0.4em;
-    color:#000;
-  }
-  #countdown-timer span {
-    background-color: transparent;
-    color: #5fcf80;
-    font-size: 2em;
-    font-weight: normal;
-    text-align: center;
-    width: 33%;
+    font-size:0.7em;
+    color:#fff;
     display: block;
-    float: left;
-    border-right:1px solid #ccc;
-    padding-left:2%;
+    margin-bottom: 5px;
   }
-  #countdown-timer span:last-child {
-    border-right:none;
+  
+  #countdown-timer span {
+    color: #5fcf80;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+    display: inline-block;
+    margin: 0 5px;
   }
     
   @media (max-width:1199px) {
+    #countdown-timer {
+      position: fixed;
+      top: auto;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
     #countdown-timer label {
-      display:block;
+      text-align: center;
     }
   }
 
@@ -56,39 +408,53 @@
 
 {% block content %}
 
-  <!--Section: Quiz -->
-  <section class="my-5">
-    <div class="container">
+<!-- Typeform-style Quiz Container -->
+<div class="typeform-quiz">
+  <!-- Progress Bar -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  
+  <!-- Progress Text -->
+  <div class="progress-text" id="progress-text">0%</div>
 
-    <!--Section heading-->
-    <h2 class="h1-responsive font-weight-bold text-center my-4">{{quiz.name}}</h2>
-    <!--Section description-->
-    <p class="text-center w-responsive mx-auto mb-5">“To be, or not to be: that is the question.”</p>
+  {%  if time %}
+  <!-- Countdown Timer -->
+  <div id="countdown-timer" style="display: none;"></div>
+  {% endif %}
 
-    <!-- <section class="before-quiz d-flex justify-content-center align-items-center">
-      <div class="before-quiz container position-relative" data-aos="zoom-in" data-aos-delay="100">
-        <h2>Ready to take your quiz? </h2>
-        <a href="#" onclick="startQuiz()" class="get-started-btn mx-0">Start Quiz</a>
-      </div>
-    </section> -->
-
-    <div class="row">
-      <!--Grid column-->
-      <!-- style="display: None;" -->
-      <div class="col-md-9 mb-md-0 mb-5 mx-auto" id="quiz-container">
-          <div style="color: #d93025;" class="mb-3">* Required</div> 
-          <!-- onmousedown="return false" onselectstart="return false" -->
-          <form autocomplete="off" oncopy="return false" oncut="return false" onpaste="return false" id="quiz-form" class="unselectable" name="quiz-form" method="POST" action="{% url "home:quiz" quiz_id=quiz.id %}">
-              {% csrf_token %}
-              {{ form }}
-              <input type="hidden" name="seed" id="seed" value="{{seed}}">
-              <div class="text-center text-md-left mt-3">
-                <button id="quizsubmitbtn" type="button" class="get-started-btn" onclick="this.disabled=true,this.form.checkValidity(),this.form.submit();">Submit Your Answers</button>
-              </div>
-          </form>
-      </div>
+  <div class="quiz-wrapper">
+    <!-- Welcome Screen -->
+    <div class="question-slide active welcome-screen" id="welcome-screen">
+      <h1>{{quiz.name}}</h1>
+      <p>"To be, or not to be: that is the question."</p>
+      <button class="start-btn" onclick="startQuiz()">Start Quiz</button>
     </div>
-  </section>
+
+    <!-- Quiz Form (Hidden initially) -->
+    <form autocomplete="off" oncopy="return false" oncut="return false" onpaste="return false" id="quiz-form" class="unselectable" name="quiz-form" method="POST" action="{% url "home:quiz" quiz_id=quiz.id %}" style="display: none;">
+      {% csrf_token %}
+      <input type="hidden" name="seed" id="seed" value="{{seed}}">
+      
+      <!-- Original form fields (will be transformed) -->
+      <div id="original-form-fields" style="display: none;">
+        {{ form }}
+      </div>
+      
+      <!-- Questions will be dynamically inserted here -->
+      <div id="questions-container"></div>
+      
+      <!-- Submit Button (Hidden initially) -->
+      <div class="question-slide" id="completion-screen">
+        <div class="completion-screen">
+          <h2>🎉 Quiz Complete!</h2>
+          <p>Thank you for completing the quiz. Click below to submit your answers.</p>
+          <button type="submit" class="submit-btn" id="final-submit-btn">Submit Answers</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Modal -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -132,181 +498,635 @@
   <noscript>Sorry, your browser does not support JavaScript!</noscript>
 
   <script>
+    let currentQuestion = 0;
+    let questions = [];
+    let totalQuestions = 0;
+    let leave_count = 0;
 
-    // scroll to form error if any
-    {% if form.is_bound %}
-
-      function scrollToTargetAdjusted(selector){
-        var element = document.querySelector(selector);
-        var headerOffset = 150;
-        var elementPosition = element.getBoundingClientRect().top;
-        var offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      
-        window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth"
-        });
+    // Parse Django form and create Typeform slides
+    function createTypeformFromDjangoForm() {
+      const originalForm = document.getElementById('original-form-fields');
+      if (!originalForm) {
+        console.error('Original form not found');
+        return;
       }
 
-      document.addEventListener("DOMContentLoaded", function () {
-        // document.querySelector(".errorlist").scrollIntoView({ behavior: 'smooth', block: 'start' });
-        scrollToTargetAdjusted(".errorlist");
-      });
-
-    {% endif %}
-
-    // start and show quiz
-    function startQuiz(){
-      // document.querySelectorAll('.before-quiz').forEach(function(element) {
-      //   // Now do something with my element
-      //   element.remove();
-      // });
-      // document.getElementById("quiz-container").style.display = "block"; 
-      // show countdown timer
-      document.getElementById("countdown-timer").style.display = "block"; 
-      document.querySelector("#header div:nth-child(2)").innerHTML = '';
-
-      {%  if time %}
-      updateTimer();      
-      {% endif %}
+      questions = [];
       
-      // update start time
-      // document.querySelector("#id_start").value = new Date().toISOString();
+      // Debug: Log the HTML structure
+      console.log('Original form HTML:', originalForm.innerHTML);
+      
+      // Get all elements in the form
+      const allElements = Array.from(originalForm.children);
+      console.log('Direct children:', allElements.length);
+      
+      // Process elements to find question-label pairs
+      let i = 0;
+      while (i < allElements.length) {
+        const element = allElements[i];
+        
+        // Check if this is a label for a radio question
+        if (element.tagName === 'LABEL' && element.getAttribute('for')) {
+          const forId = element.getAttribute('for');
+          const questionText = element.textContent.replace('*', '').trim();
+          const isRequired = element.textContent.includes('*');
+          
+          // Look ahead for the corresponding radio group
+          let nextElement = allElements[i + 1];
+          if (nextElement && nextElement.tagName === 'UL') {
+            // This is a radio question
+            const radioInputs = nextElement.querySelectorAll('input[type="radio"]');
+            if (radioInputs.length > 0) {
+              const radioName = radioInputs[0].name;
+              const options = [];
+              
+              radioInputs.forEach((radio) => {
+                const radioLabel = nextElement.querySelector(`label[for="${radio.id}"]`);
+                if (radioLabel) {
+                  options.push({
+                    value: radio.value,
+                    label: radioLabel.textContent.trim()
+                  });
+                }
+              });
+              
+              questions.push({
+                id: radioName,
+                text: questionText,
+                required: isRequired,
+                type: 'radio',
+                options: options,
+                originalGroup: element.parentElement
+              });
+              
+              console.log(`Added radio question: ${questionText} with ${options.length} options`);
+              i += 2; // Skip the UL element
+              continue;
+            }
+          }
+          
+          // Check if this is a label for text/number input
+          const inputElement = document.getElementById(forId);
+          if (inputElement && (inputElement.type === 'text' || inputElement.type === 'number' || inputElement.tagName === 'TEXTAREA')) {
+            questions.push({
+              id: inputElement.name,
+              text: questionText,
+              required: isRequired,
+              type: inputElement.tagName === 'TEXTAREA' ? 'textarea' : inputElement.type,
+              originalGroup: element.parentElement
+            });
+            
+            console.log(`Added text/number question: ${questionText}`);
+            i++;
+            continue;
+          }
+        }
+        
+        // Check if this is a standalone input (text/number/textarea)
+        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+          const input = element;
+          if (input.type !== 'hidden' && input.name && input.name !== 'start' && input.name !== 'seed') {
+            // Find the label for this input
+            const label = originalForm.querySelector(`label[for="${input.id}"]`);
+            const questionText = label ? label.textContent.replace('*', '').trim() : input.name;
+            const isRequired = label ? label.textContent.includes('*') : false;
+            
+            questions.push({
+              id: input.name,
+              text: questionText,
+              required: isRequired,
+              type: input.tagName === 'TEXTAREA' ? 'textarea' : input.type,
+              originalGroup: element.parentElement
+            });
+            
+            console.log(`Added standalone input question: ${questionText}`);
+          }
+        }
+        
+        i++;
+      }
+      
+      totalQuestions = questions.length;
+      console.log('Final questions array:', questions);
+      createQuestionSlides();
     }
 
+    // Create question slides
+    function createQuestionSlides() {
+      const container = document.getElementById('questions-container');
+      container.innerHTML = '';
+      
+      questions.forEach((question, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'question-slide';
+        slide.id = `question-${index}`;
+        
+        let questionHTML = `
+          <div class="question-number">Question ${index + 1} of ${totalQuestions}</div>
+          <div class="question-text">${question.text}${question.required ? ' *' : ''}</div>
+        `;
+        
+        // Add image if exists
+        {% for question_num, img in images.items %}
+          if (question.id === 'id_q{{ question_num }}') {
+            questionHTML += `<img src="{{ img }}" class="question-image" alt="Question image">`;
+          }
+        {% endfor %}
+        
+        questionHTML += '<div class="quiz-field">';
+        
+        if (question.type === 'radio') {
+          questionHTML += '<div class="radio-options">';
+          question.options.forEach((option, optionIndex) => {
+            questionHTML += `
+              <div class="radio-option" onclick="selectRadioOption('${question.id}', '${option.value}', this)">
+                <input type="radio" name="${question.id}" value="${option.value}" id="${question.id}_${optionIndex}">
+                <label class="radio-label" for="${question.id}_${optionIndex}">${option.label}</label>
+              </div>
+            `;
+          });
+          questionHTML += '</div>';
+        } else if (question.type === 'textarea') {
+          questionHTML += `<textarea class="text-input" name="${question.id}" placeholder="Your answer..." rows="4" onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')" onblur="checkAnswer('${question.id}')">${question.value || ''}</textarea>`;
+        } else if (question.type === 'number') {
+          questionHTML += `<input type="number" class="number-input" name="${question.id}" placeholder="Enter a number" onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')" onblur="checkAnswer('${question.id}')">`;
+        } else {
+          questionHTML += `<input type="text" class="text-input" name="${question.id}" placeholder="Your answer..." onkeyup="checkAnswer('${question.id}')" oninput="checkAnswer('${question.id}')" onchange="checkAnswer('${question.id}')" onblur="checkAnswer('${question.id}')">`;
+        }
+        
+        questionHTML += '</div>';
+        
+        // Navigation buttons
+        questionHTML += `
+          <div class="quiz-navigation">
+            ${index > 0 ? '<button type="button" class="nav-btn prev-btn" onclick="previousQuestion()">Previous</button>' : '<div></div>'}
+            ${index < totalQuestions - 1 ? 
+              '<button type="button" class="nav-btn next-btn" id="next-btn-' + index + '" onclick="nextQuestion()" disabled>Next</button>' :
+              '<button type="button" class="nav-btn next-btn" onclick="showCompletion()">Review</button>'
+            }
+          </div>
+        `;
+        
+        slide.innerHTML = questionHTML;
+        container.appendChild(slide);
+      });
+      
+      // Initialize all input fields after a short delay
+      setTimeout(() => {
+        questions.forEach((question) => {
+          if (question.type !== 'radio') {
+            checkAnswer(question.id);
+          }
+        });
+      }, 100);
+    }
+
+    // Select radio option
+    function selectRadioOption(fieldName, value, element) {
+      const options = element.parentElement.querySelectorAll('.radio-option');
+      options.forEach(opt => opt.classList.remove('selected'));
+      
+      element.classList.add('selected');
+      const radio = element.querySelector('input[type="radio"]');
+      radio.checked = true;
+      
+      const questionIndex = questions.findIndex(q => q.id === fieldName);
+      const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+      if (nextBtn) {
+        nextBtn.disabled = false;
+      }
+    }
+
+    // Check if answer is provided
+    function checkAnswer(fieldName) {
+      console.log(`=== checkAnswer called for ${fieldName} ===`);
+      
+      // Add a small delay to ensure the DOM is updated
+      setTimeout(() => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        const questionIndex = questions.findIndex(q => q.id === fieldName);
+        const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+        
+        console.log(`Field found:`, !!field);
+        console.log(`Question index:`, questionIndex);
+        console.log(`Next button found:`, !!nextBtn);
+        
+        if (field) {
+          console.log(`Field type:`, field.type);
+          console.log(`Field tag name:`, field.tagName);
+          console.log(`Field value:`, `"${field.value}"`);
+          console.log(`Field value length:`, field.value.length);
+          console.log(`Field value type:`, typeof field.value);
+        }
+        
+        if (nextBtn) {
+          console.log(`Next button current state:`, nextBtn.disabled);
+        }
+        
+        if (nextBtn && field) {
+          let hasValue = false;
+          
+          if (field.type === 'number') {
+            // Simple and direct number validation
+            const val = field.value;
+            console.log(`Number validation - val: "${val}", typeof val: ${typeof val}`);
+            hasValue = val && val.toString().trim() !== '' && !isNaN(val) && val !== '';
+            console.log(`Number field check: value="${field.value}", isNaN=${isNaN(field.value)}, hasValue=${hasValue}`);
+          } else if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+            hasValue = field.value && field.value.trim() !== '';
+            console.log(`Text/textarea check: trimmed value="${field.value ? field.value.trim() : ''}", hasValue=${hasValue}`);
+          } else {
+            hasValue = field.value && field.value.trim() !== '';
+            console.log(`Other field check: trimmed value="${field.value ? field.value.trim() : ''}", hasValue=${hasValue}`);
+          }
+          
+          console.log(`Final hasValue: ${hasValue}, setting nextBtn.disabled to ${!hasValue}`);
+          
+          if (hasValue) {
+            nextBtn.disabled = false;
+            console.log(`✅ Next button ENABLED for ${fieldName}`);
+          } else {
+            nextBtn.disabled = true;
+            console.log(`❌ Next button DISABLED for ${fieldName}`);
+          }
+        } else {
+          // If we can't find the specific next button, try to find any next button in the current slide
+          const currentSlide = field ? field.closest('.question-slide') : null;
+          if (currentSlide) {
+            const slideNextBtn = currentSlide.querySelector('.next-btn');
+            if (slideNextBtn && field) {
+              let hasValue = false;
+              
+              if (field.type === 'number') {
+                const val = field.value;
+                hasValue = val && val.toString().trim() !== '' && !isNaN(val) && val !== '';
+              } else if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+                hasValue = field.value && field.value.trim() !== '';
+              } else {
+                hasValue = field.value && field.value.trim() !== '';
+              }
+              
+              slideNextBtn.disabled = !hasValue;
+              console.log(`🔄 Using slide next button, hasValue=${hasValue}`);
+            }
+          } else if (nextBtn) {
+            nextBtn.disabled = true;
+            console.log(`❌ Next button disabled for ${fieldName} (field not found)`);
+          }
+        }
+        
+        console.log(`=== End checkAnswer for ${fieldName} ===`);
+      }, 10); // 10ms delay
+    }
+
+    // Navigation functions
+    function showQuestion(index) {
+      document.querySelectorAll('.question-slide').forEach(slide => {
+        slide.classList.remove('active', 'prev');
+      });
+      
+      const currentSlide = document.getElementById(`question-${index}`);
+      if (currentSlide) {
+        currentSlide.classList.add('active');
+      }
+      
+      updateProgress();
+    }
+
+    function nextQuestion() {
+      if (currentQuestion < totalQuestions - 1) {
+        if (!validateCurrentQuestion()) {
+          return;
+        }
+        
+        currentQuestion++;
+        showQuestion(currentQuestion);
+      }
+    }
+
+    function previousQuestion() {
+      if (currentQuestion > 0) {
+        currentQuestion--;
+        showQuestion(currentQuestion);
+      }
+    }
+
+    function showCompletion() {
+      if (!validateCurrentQuestion()) {
+        return;
+      }
+      
+      document.querySelectorAll('.question-slide').forEach(slide => {
+        slide.classList.remove('active');
+      });
+      
+      document.getElementById('completion-screen').classList.add('active');
+      updateProgress();
+    }
+
+    // Validation
+    function validateCurrentQuestion() {
+      const question = questions[currentQuestion];
+      const slide = document.getElementById(`question-${currentQuestion}`);
+      const quizField = slide.querySelector('.quiz-field');
+      
+      let hasAnswer = false;
+      
+      if (question.type === 'radio') {
+        const selectedRadio = document.querySelector(`input[name="${question.id}"]:checked`);
+        hasAnswer = selectedRadio !== null;
+      } else {
+        const field = document.querySelector(`[name="${question.id}"]`);
+        hasAnswer = field && field.value.trim() !== '';
+      }
+      
+      if (question.required && !hasAnswer) {
+        quizField.classList.add('error');
+        setTimeout(() => {
+          quizField.classList.remove('error');
+        }, 500);
+        return false;
+      }
+      
+      return true;
+    }
+
+    // Progress bar
+    function updateProgress() {
+      let progress;
+      if (document.getElementById('completion-screen').classList.contains('active')) {
+        progress = 100;
+      } else {
+        progress = (currentQuestion / totalQuestions) * 100;
+      }
+      document.getElementById('progress-bar').style.width = progress + '%';
+      document.getElementById('progress-text').textContent = Math.round(progress) + '%';
+    }
+
+    // Alternative simple approach - transform existing form
+    function transformExistingForm() {
+      const originalForm = document.getElementById('original-form-fields');
+      if (!originalForm) return;
+      
+      // Move form fields to questions container with Typeform styling
+      const container = document.getElementById('questions-container');
+      const formFields = originalForm.children;
+      
+      // Create a single slide with all questions styled
+      const slide = document.createElement('div');
+      slide.className = 'question-slide active';
+      slide.id = 'all-questions';
+      
+      let slideHTML = '<div class="question-text">{{quiz.name}}</div>';
+      
+      // Process each form field
+      Array.from(formFields).forEach((field, index) => {
+        if (field.querySelector('input[type="hidden"]')) return;
+        
+        const label = field.querySelector('label');
+        if (label) {
+          const questionText = label.textContent.replace('*', '').trim();
+          const isRequired = label.textContent.includes('*');
+          
+          slideHTML += `
+            <div class="question-number">Question ${index + 1}</div>
+            <div class="question-text">${questionText}${isRequired ? ' *' : ''}</div>
+            <div class="quiz-field">
+          `;
+          
+          // Clone the field content
+          slideHTML += field.innerHTML;
+          
+          slideHTML += '</div>';
+        }
+      });
+      
+      slideHTML += `
+        <div class="quiz-navigation">
+          <div></div>
+          <button type="submit" class="submit-btn">Submit Answers</button>
+        </div>
+      `;
+      
+      slide.innerHTML = slideHTML;
+      container.appendChild(slide);
+      
+      // Apply Typeform styling to form elements
+      setTimeout(() => {
+        // Style radio buttons
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+          const label = document.querySelector(`label[for="${radio.id}"]`);
+          if (label && !label.parentElement.classList.contains('radio-option')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'radio-option';
+            wrapper.onclick = function() {
+              wrapper.parentElement.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+              wrapper.classList.add('selected');
+              radio.checked = true;
+            };
+            
+            label.className = 'radio-label';
+            wrapper.appendChild(radio);
+            wrapper.appendChild(label);
+            radio.parentElement.replaceChild(wrapper, radio);
+          }
+        });
+        
+        // Style text inputs
+        document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(input => {
+          input.className = input.type === 'number' ? 'number-input' : 'text-input';
+        });
+        
+        // Add images
+        {% for question_num, img in images.items %}
+          if (document.querySelector("[for='id_q{{ question_num }}_0']") !== null){
+            document.querySelector("[for='id_q{{ question_num }}_0']").insertAdjacentHTML('beforebegin',
+          '<img class="question-image" src="{{ img }}">');
+          }else if(document.querySelector("[for='id_q{{ question_num }}']") !== null){
+            document.querySelector("[for='id_q{{ question_num }}']").insertAdjacentHTML('beforebegin',
+          '<img class="question-image" src="{{ img }}">');
+          }
+        {% endfor %}
+      }, 100);
+    }
+
+    // Start quiz
+    function startQuiz(){
+      // Hide welcome screen
+      document.getElementById('welcome-screen').classList.remove('active');
+      
+      // Show form
+      document.getElementById('quiz-form').style.display = 'block';
+      
+      // Try Typeform approach first
+      createTypeformFromDjangoForm();
+      
+      // Show first question if we have questions
+      if (questions.length > 0) {
+        console.log('Showing Typeform with', questions.length, 'questions');
+        showQuestion(0);
+      } else {
+        console.log('No questions parsed, using simple transformation');
+        // Use simple transformation approach
+        transformExistingForm();
+        document.getElementById('completion-screen').style.display = 'none';
+      }
+      
+      // Show countdown timer
+      {% if time %}
+      document.getElementById("countdown-timer").style.display = "block";
+      updateTimer();
+      {% endif %}
+      
+      // Set start time
+      const startField = document.createElement('input');
+      startField.type = 'hidden';
+      startField.name = 'start';
+      startField.value = new Date().toISOString();
+      document.getElementById('quiz-form').appendChild(startField);
+      
+      // Start inactivity timer
+      inactivityTime();
+    }
+
+    // Cheating detection
     function actionOnCheating(){
       document.getElementById("quiz-form").reset();  
-      document.getElementById("quizsubmitbtn").disabled=true; 
       
-      // destroy old modal
-      document.getElementById('exampleModal').remove();
-
-      // remove quiz
-      document.getElementById('quiz-container').remove();          
+      // Destroy old modal
+      const exampleModal = document.getElementById('exampleModal');
+      if (exampleModal) {
+        exampleModal.remove();
+      }
       
-      // show non-closed
+      // Remove quiz
+      document.querySelector('.typeform-quiz').remove();          
+      
+      // Show cheating modal
       var cheatingModal = new bootstrap.Modal(document.getElementById('staticBackdrop'), {
         keyboard: false
       }) 
       cheatingModal.show()
     }
 
-    // handle inactivity case
-  var inactivityTime = function () {
-    var time;
+    // Inactivity timer
+    var inactivityTime = function () {
+      var time;
 
-    function resetTimer() {
-      clearTimeout(time);
-      time = setTimeout(actionOnCheating, 45*1000);
-      // 1000 milliseconds = 1 second
-    }
-
-    window.addEventListener('load', resetTimer, true);
-    var events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-      events.forEach(function(name) {
-      window.addEventListener(name, resetTimer, true);
-    });
-
-  };
-
-  {%  if time %}
-
-    // show countdown timer
-    document.querySelector("#header").insertAdjacentHTML('afterbegin',
-      ' <div id="countdown-timer" style="display: None;"></div>');
-
-    function updateTimer(){
-      // update timer
-      // set the date we're counting down to
-      var target_date = new Date(new Date(document.querySelector("#id_start").value).getTime() + {{ time }}*60000).getTime();
-      
-      // variables for time units
-      var days, hours, minutes, seconds;
-        
-      // get tag element
-      var countdown = document.getElementById('countdown-timer');
-        
-      // update the tag with id "countdown" every 1 second
-      setInterval(function () {
-        
-          // find the amount of "seconds" between now and target
-          var current_date = new Date().getTime();
-          var seconds_left = (target_date - current_date) / 1000;
-        
-          // do some time calculations
-          days = parseInt(seconds_left / 86400);
-          seconds_left = seconds_left % 86400;
-            
-          hours = parseInt(seconds_left / 3600);
-          seconds_left = seconds_left % 3600;
-            
-          minutes = parseInt(seconds_left / 60);
-          seconds = parseInt(seconds_left % 60);
-            
-          // format countdown string + set tag value
-        
-          // to add days, uncomment next line  
-          // <span class="days">' + days +  ' <label>Days</label></span>      
-          countdown.innerHTML = '<span class="hours">' + hours + ' <label>Hours</label></span><span class="minutes">'
-          + minutes + ' <label>Minutes</label></span>'+
-        ' <span class="seconds">' + seconds + ' <label>Seconds</label></span>';  
-        
-      }, 1000);
-
-    }
-    
-
-  {% endif %}
-
-    // show images
-    {% for question_num, img in images.items %}
-      if (document.querySelector("[for='id_q{{ question_num }}_0']") !== null){
-        document.querySelector("[for='id_q{{ question_num }}_0']").insertAdjacentHTML('beforebegin',
-      '<img class="img-fluid mx-auto d-block mt-5" src="{{ img }}">');
-
-      }else if(document.querySelector("[for='id_q{{ question_num }}']") !== null){
-        document.querySelector("[for='id_q{{ question_num }}']").insertAdjacentHTML('beforebegin',
-      '<img class="img-fluid mx-auto d-block mt-5" src="{{ img }}">');
-
+      function resetTimer() {
+        clearTimeout(time);
+        time = setTimeout(actionOnCheating, 45*1000);
       }
-     
-    {% endfor %}
 
-    // handle pageshow event
+      window.addEventListener('load', resetTimer, true);
+      var events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(function(name) {
+        window.addEventListener(name, resetTimer, true);
+      });
+    };
 
-    window.addEventListener("pageshow", () => {
-      console.log("Pageshow reset");
-      document.getElementById("quiz-form").reset();
-      // this changes the scrolling behavior to "smooth"
-      // window.scrollTo({ top: 0, behavior: 'smooth' });
-      startQuiz();
-      inactivityTime();
+    // Timer functionality
+    {% if time %}
+    function updateTimer(){
+      const target_date = new Date(new Date().getTime() + {{ time }}*60000).getTime();
+      const countdown = document.getElementById('countdown-timer');
+      
+      setInterval(function() {
+        const current_date = new Date().getTime();
+        const seconds_left = (target_date - current_date) / 1000;
+        
+        if (seconds_left <= 0) {
+          actionOnCheating();
+          return;
+        }
+        
+        const hours = parseInt(seconds_left / 3600);
+        const minutes = parseInt((seconds_left % 3600) / 60);
+        const seconds = parseInt(seconds_left % 60);
+        
+        countdown.innerHTML = '<span>' + hours + ' <label>Hours</label></span><span>' +
+          minutes + ' <label>Minutes</label></span><span>' + seconds + ' <label>Seconds</label></span>';
+      }, 1000);
+    }
+    {% endif %}
 
-    });
-
-    let leave_count = 0;    
-
+    // Page visibility handling
     document.onvisibilitychange = function() {
       if (document.visibilityState === 'hidden') {
-
-        console.log("onvisibilitychange reset");
         leave_count += 1;
         if(leave_count >= 3){
-          // cheating case
           actionOnCheating();
         }
-        document.getElementById("exampleModalLabel").innerText ="You have left the quiz for "+leave_count+" time(s).";
+        const modalTitle = document.getElementById("exampleModalLabel");
+        if (modalTitle) {
+          modalTitle.innerText ="You have left the quiz for "+leave_count+" time(s).";
+        }
  
         if (leave_count < 3 && !document.getElementById('exampleModal').classList.contains('show')){
           var myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
           keyboard: true
           }) 
-          console.log("Creating modal...");
           myModal.show()
         }  
       }
-    };  
+    };
 
+    // Handle form submission
+    document.getElementById('quiz-form').addEventListener('submit', function(e) {
+      const submitBtn = document.getElementById('final-submit-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+      }
+    });
+
+    // Debug function - call this from browser console
+    function debugField(fieldName) {
+      console.log(`=== DEBUGGING FIELD: ${fieldName} ===`);
+      const field = document.querySelector(`[name="${fieldName}"]`);
+      const questionIndex = questions.findIndex(q => q.id === fieldName);
+      const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+      
+      console.log(`Field element:`, field);
+      console.log(`Field exists:`, !!field);
+      console.log(`Field type:`, field?.type);
+      console.log(`Field tag:`, field?.tagName);
+      console.log(`Field value:`, field?.value);
+      console.log(`Field value trimmed:`, field?.value?.trim());
+      console.log(`Question index:`, questionIndex);
+      console.log(`Next button:`, nextBtn);
+      console.log(`Next button disabled:`, nextBtn?.disabled);
+      
+      // Test the conditions manually
+      if (field?.type === 'number') {
+        const val = field.value;
+        const hasValue = val && val.toString().trim() !== '' && !isNaN(val) && val !== '';
+        console.log(`Number field hasValue:`, hasValue, `(value="${field.value}", isNaN=${isNaN(field.value)})`);
+        console.log(`Manual test: val=${val}, val && val.toString().trim() !== ''=${val && val.toString().trim() !== ''}, !isNaN(val)=${!isNaN(val)}`);
+      } else if (field?.type === 'text' || field?.tagName === 'TEXTAREA') {
+        const hasValue = field.value.trim() !== '';
+        console.log(`Text/textarea hasValue:`, hasValue, `(trimmed="${field.value.trim()}")`);
+      }
+      
+      console.log(`=== END DEBUG ===`);
+    }
+    
+    // Test function to manually enable next button
+    function forceEnableNext(fieldName) {
+      const questionIndex = questions.findIndex(q => q.id === fieldName);
+      const nextBtn = document.getElementById(`next-btn-${questionIndex}`);
+      if (nextBtn) {
+        nextBtn.disabled = false;
+        console.log(`Force enabled next button for ${fieldName}`);
+      }
+    }
+
+    // Handle pageshow event
+    window.addEventListener("pageshow", () => {
+      console.log("Pageshow reset");
+      document.getElementById("quiz-form").reset();
+      leave_count = 0;
+    });
 
   </script>
 
