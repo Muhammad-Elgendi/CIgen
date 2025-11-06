@@ -109,6 +109,7 @@ Install docker engine and docker compose.
 8. Creating a New Administrator Account
     ```sh
    docker-compose exec web bash
+   python manage.py migrate
    python manage.py createsuperuser
    ```
 9. Fill out your credentials
